@@ -1,17 +1,20 @@
 package com.mathmaurer.jeu;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.mathmaurer.objets.Block;
+import com.mathmaurer.objets.TuyauRouge;
+
 
 public class Scene implements Screen {
 
+    // **** Variables **** //
     private Texture imgFond1, imgFond2, imgChateau1, imgDepart;
     private SpriteBatch batch;
-    private Mario mario;
 
     private int xFond1, xFond2, dx, xPos;
     private final int VITESSE_FOND = 1;
@@ -19,6 +22,10 @@ public class Scene implements Screen {
     private int positionLimiteDepart;
     private boolean aDeplaceDroite;
     private boolean departAtteint;
+
+    private Mario mario;
+    private TuyauRouge tuyauRouge1;
+    private Block bloc1;
 
     private final int HAUTEUR_SOL = 0; // Sol à y = 0
     private final int HAUTEUR_PLAFOND = 360; // Par exemple, plafond à y = 300
@@ -40,9 +47,14 @@ public class Scene implements Screen {
 
         batch = new SpriteBatch();
 
-        // Initialisation de Mario
-        mario = new Mario(250, 55); // Initialisation avec la position de départ
+        // Initialisation des objets
+        mario = new Mario(220, 55); // Initialisation avec la position de départ
+        tuyauRouge1 = new TuyauRouge(600, 55);
+        bloc1 = new Block(400, 180);
 
+
+     
+    
         // Position limite de départ pour Mario
         positionLimiteDepart = 220 + imgDepart.getWidth();
         xPos = positionLimiteDepart;
@@ -107,10 +119,7 @@ public class Scene implements Screen {
         return HAUTEUR_PLAFOND;
     }
     
-    @Override
-    public void show() {
-        // Initialisation déjà effectuée dans le constructeur
-    }
+  
 
 
     @Override
@@ -142,6 +151,10 @@ public class Scene implements Screen {
                 departAtteint = true;
             }
         }
+
+        batch.draw(tuyauRouge1.getImgTuyauRouge(), tuyauRouge1.getX() - xPos, tuyauRouge1.getY());
+        batch.draw(bloc1.getImgBloc(), bloc1.getX() - xPos, bloc1.getY());
+        
         
         // Fin du dessin
         batch.end();
@@ -151,10 +164,10 @@ public class Scene implements Screen {
     }
     
 
-      
-private void deplacementMario() {
-    // Mise à jour de la position horizontale de Mario
-    mario.move(dx);
+    private void deplacementFond() {
+        // Déplacement du fond en fonction de la vitesse de Mario
+        xFond1 -= dx;
+        xFond2 -= dx;
 
     // Vérifier si Mario atteint la limite de départ
     if (mario.getX() > positionLimiteDepart && !departAtteint) {
@@ -162,9 +175,50 @@ private void deplacementMario() {
         aDeplaceDroite = true; // Indique que Mario a quitté le point de départ
     }
 
-    // Empêcher Mario de dépasser les bords de l'écran
-    if (mario.getX() < 0) {
-        mario.move(-mario.getX()); // Ramener Mario à la limite gauche
+    private void deplacementMario() {
+        // Déplacement de Mario avec la position xPos
+        if (dx != 0) {
+            mario.move(dx); // Déplacement de Mario
+        }
+
+        // Limite de départ
+        if (mario.getX() < positionLimiteDepart) {
+            mario.move(positionLimiteDepart - mario.getX()); // Empêcher Mario de dépasser le point de départ
+        }
+
+        // Limite du bord droit de l'écran
+        if (mario.getX() > Gdx.graphics.getWidth() - mario.getTexture().getWidth()) {
+            mario.move(Gdx.graphics.getWidth() - mario.getTexture().getWidth() - mario.getX()); // Mario ne dépasse pas l'écran
+        }
+    }
+
+   
+
+    @Override
+    public void show() {}
+
+    @Override
+    public void resize(int width, int height) {}
+
+    @Override
+    public void pause() {}
+
+    @Override
+    public void resume() {}
+
+    @Override
+    public void hide() {}
+
+    @Override
+    public void dispose() {
+        batch.dispose();
+        imgFond1.dispose();
+        imgFond2.dispose();
+        imgChateau1.dispose();
+        imgDepart.dispose();
+        tuyauRouge1.dispose();
+        bloc1.dispose();
+        mario.getTexture().dispose(); // Libérer la texture de Mario
     }
 }
 
