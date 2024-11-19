@@ -6,50 +6,54 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.mathmaurer.objets.Block;
+import com.mathmaurer.objets.TuyauRouge;
+import com.mathmaurer.personnages.Mario;
+
 public class Scene implements Screen {
 
-    private Texture imgFond1, imgFond2, imgMario, imgChateau1, imgDepart;
+    // **** Variables **** //
+    private Texture imgFond1, imgFond2, imgChateau1, imgDepart;
     private SpriteBatch batch;
 
     private int xFond1, xFond2, dx, xPos; // Position du fond et de Mario
-    private final int VITESSE_FOND = 2;
+    private final int VITESSE_FOND = 2; // Vitesse de déplacement du fond
     private final int largeurFond = 800; // Largeur d'un fond
-    private int positionLimiteDepart; // Position limite calculée pour Mario
-    private boolean aDeplaceDroite; // Indicateur pour vérifier si Mario a déplacé à droite
-    private boolean departAtteint; // Indicateur pour vérifier si Mario a atteint le point de départ
+
+    private Mario mario;
+    private TuyauRouge tuyauRouge1;
+    private Block bloc1;
+    InputAdapter inputAdapter;
 
     public Scene() {
         // Initialisation des positions
-        this.xFond1 = 0;
-        this.xFond2 = largeurFond;
+        this.xFond1 = -50;
+        this.xFond2 = 750;
         this.dx = 0;
-        this.xPos = 220; // Position de départ de Mario
-        this.aDeplaceDroite = false; // Mario n'a pas encore déplacé à droite
-        this.departAtteint = false; // Le départ n'est pas encore atteint
+        this.xPos = -1;
 
         // Chargement des images
         imgFond1 = new Texture("images/fondEcran.png");
         imgFond2 = new Texture("images/fondEcran.png");
-        imgMario = new Texture("images/marioMarcheDroite.png");
         imgChateau1 = new Texture("images/chateau1.png");
         imgDepart = new Texture("images/depart.png");
 
         batch = new SpriteBatch();
 
-        // Position limite de départ pour Mario après `imgDepart`
-        positionLimiteDepart = 220 + imgDepart.getWidth();
-        xPos = positionLimiteDepart;
+        // Initialisation des objets
+        mario = new Mario(300, 55);
+        tuyauRouge1 = new TuyauRouge(600, 55);
+        bloc1 = new Block(400, 180);
 
         // Gestion des entrées du clavier
-        InputAdapter inputAdapter = new InputAdapter() {
+        inputAdapter = new InputAdapter() {
             @Override
             public boolean keyDown(int keycode) {
                 if (keycode == Input.Keys.RIGHT) {
                     dx = VITESSE_FOND;
-                    aDeplaceDroite = true;
                 }
-                if (keycode == Input.Keys.LEFT && xPos > positionLimiteDepart) {
-                    dx = -VITESSE_FOND; // Déplacement à gauche possible seulement après être allé à droite
+                if (keycode == Input.Keys.LEFT) {
+                    dx = -VITESSE_FOND;
                 }
                 return true;
             }
@@ -62,81 +66,72 @@ public class Scene implements Screen {
                 return true;
             }
         };
-
         Gdx.input.setInputProcessor(inputAdapter);
     }
 
-    @Override
-    public void show() {
-        // Aucune modification ici, déjà initialisé dans le constructeur
-    }
-
-    @Override
-    public void render(float delta) {
-        batch.begin();
-
-        // Déplacer Mario et le fond
-        deplacementMario();
-        deplacementFond();
-
-        // Dessiner le fond
-        batch.draw(imgFond1, xFond1, 0);
-        batch.draw(imgFond2, xFond2, 0);
-
-        // Dessiner Mario
-        batch.draw(imgMario, xPos, 55); // Mario suit la position `xPos`
-
-        // Affichage du château et du départ uniquement si Mario n'a pas dépassé le point limite
-        if (!departAtteint) {
-            // Afficher le château et le départ uniquement tant que Mario n'a pas dépassé la position limite
-            batch.draw(imgChateau1, 10 + xFond1, 60); // Le château suit le fond
-            batch.draw(imgDepart, positionLimiteDepart + xFond1, 60); // Le départ suit le fond
-
-            // Vérification si Mario a dépassé la limite de départ
-            if (xPos >= positionLimiteDepart + imgDepart.getWidth()) {
-                departAtteint = true; // Une fois Mario a passé le point de départ, on marque l'événement
-            }
+    // **** Méthodes principales **** //
+    private void deplacementFond() {
+        // Mise à jour des positions des éléments du jeu lors du déplacement
+        if (xPos >= 0) {
+            xPos += dx;
+            xFond1 -= dx;
+            xFond2 -= dx;
         }
 
-        batch.end();
-    }
-
-    private void deplacementFond() {
-        // Déplacement du fond en fonction de la vitesse de Mario
-        xFond1 -= dx;
-        xFond2 -= dx;
-
-        // Réinitialisation du fond lorsqu'il sort de l'écran
+        // Permanence du fond d'écran
         if (xFond1 <= -largeurFond) {
-            xFond1 = xFond2 + largeurFond;
+            xFond1 = largeurFond;
         }
         if (xFond2 <= -largeurFond) {
-            xFond2 = xFond1 + largeurFond;
+            xFond2 = largeurFond;
+        }
+        if (xFond1 >= largeurFond) {
+            xFond1 = -largeurFond;
+        }
+        if (xFond2 >= largeurFond) {
+            xFond2 = -largeurFond;
         }
     }
 
     private void deplacementMario() {
         // Déplacement de Mario avec la position xPos
         if (dx != 0) {
-            xPos += dx; // Mise à jour de la position de Mario
+            xPos += dx;
+            mario.setX(xPos); // Mise à jour de la position de Mario
         }
 
-        // Limite de départ : Mario ne peut pas aller avant la position de départ
-        if (xPos < positionLimiteDepart) {
-            xPos = positionLimiteDepart; // Mario ne peut pas aller avant `positionLimiteDepart`
-        }
-
-        // Limite du bord droit de l'écran
-        if (xPos > Gdx.graphics.getWidth() - imgMario.getWidth()) {
-            xPos = Gdx.graphics.getWidth() - imgMario.getWidth(); // Mario ne dépasse pas l'écran
+        // Mario ne peut pas aller avant la position de départ
+        if (xPos < 300) {
+            xPos = 300;
+            mario.setX(xPos); // Mise à jour de Mario
         }
     }
 
     @Override
-    public void resize(int width, int height) {}
+    public void render(float delta) {
+        batch.begin();
+
+        // Déplacement des fonds et des objets
+        deplacementFond();
+        deplacementMario();
+
+        // Dessin des éléments
+        batch.draw(imgFond1, xFond1, 0);
+        batch.draw(imgFond2, xFond2, 0);
+        batch.draw(mario.getImgMario(), mario.getX(), mario.getY(), mario.getLargeur(), mario.getHauteur());
+        batch.draw(imgChateau1, 10 - xPos, 95);
+        batch.draw(imgDepart, 220 - xPos, 234);
+        batch.draw(tuyauRouge1.getImgTuyauRouge(), tuyauRouge1.getX() - xPos, tuyauRouge1.getY());
+        batch.draw(bloc1.getImgBloc(), bloc1.getX() - xPos, bloc1.getY());
+        
+        batch.end();
+    }
 
     @Override
-    public void hide() {}
+    public void show() {}
+
+    @Override
+    public void resize(int width, int height) {}
 
     @Override
     public void pause() {}
@@ -145,12 +140,17 @@ public class Scene implements Screen {
     public void resume() {}
 
     @Override
+    public void hide() {}
+
+    @Override
     public void dispose() {
         batch.dispose();
         imgFond1.dispose();
         imgFond2.dispose();
-        imgMario.dispose();
         imgChateau1.dispose();
         imgDepart.dispose();
+        mario.dispose();
+        tuyauRouge1.dispose();
+        bloc1.dispose();
     }
 }

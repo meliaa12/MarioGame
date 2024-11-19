@@ -1,5 +1,11 @@
+images/bloc.png
 images/chateau1.png
 images/depart.png
 images/fondEcran.png
+images/marioArretDroite.png
+images/marioArretGauche.png
+images/marioMarcheDroite copy.png
 images/marioMarcheDroite.png
+images/marioMarcheGauche.png
+images/tuyauRouge.png
 libgdx.png
