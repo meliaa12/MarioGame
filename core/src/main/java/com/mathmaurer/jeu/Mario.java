@@ -3,217 +3,155 @@ package com.mathmaurer.jeu;
 import com.badlogic.gdx.graphics.Texture;
 
 public class Mario {
-    private int x;
-    private int y = 0; // Position verticale de Mario
+    private int x; // Position horizontale de Mario
+    private int y; // Position verticale de Mario
 
-    private Texture texture;
-    private boolean movingRight; // Direction du mouvement (vers la droite ou vers la gauche)
-    private int compteur; // Compteur pour gérer le changement d'images
-    private int frequence; // Fréquence à laquelle l'image change pour l'animation
-    private boolean isMoving; // Indicateur si Mario est en mouvement
-    private boolean isGrounded = true; // Indique si Mario est au sol
-    private boolean isJumping = false; // Indique si Mario est en train de sauter
-    private int vy = 0; // Vitesse verticale de Mario
+    private Texture texture; // Texture actuelle de Mario (pour l'animation)
+    private boolean movingRight; // Direction du mouvement : true = droite, false = gauche
+    private boolean isMoving; // Indicate si Mario est en mouvement
+    private boolean isJumping; // Indique si Mario est en train de sauter
+    private boolean isGrounded; // Indique si Mario est au sol
+    private int compteur; // Compteur pour gérer les animations
+    private int frequence; // Fréquence de changement des animations
+    private int vy; // Vitesse verticale lors des sauts
 
+    private boolean saut; // Indique si Mario saute
+    private boolean peutDoubleSaut; // Indique si un double saut est possible
+    private int compteurSaut; // Durée actuelle du saut
+    private static final int DUREE_SAUT = 90; // Durée maximale du saut
+    private static final int HAUTEUR_SAUT = 200; // Hauteur maximale atteinte par le saut
+    private static final int PLAFOND = 700; // Hauteur maximale (plafond)
 
-private MarioState currentState = MarioState.REPOS;
+    private static final int GROUND_HEIGHT = 0; // Niveau du sol, c'est-à-dire la hauteur de base
 
-
-private boolean saut; // Indique si Mario saute
-private boolean peutDoubleSaut; // Indique si Mario peut effectuer un double saut
-private int compteurSaut; // Compteur de la durée du saut
-private static final int DUREE_SAUT = 40; // Durée du saut
-private static final int HAUTEUR_SAUT = 400; // Hauteur maximale du saut
-private static final int PLAFOND = 700; // Hauteur plafond
-private int positionSautInitiale; // Position de Mario avant le saut
-private int vitesseSaut; // Vitesse du saut
+    private int jumpVelocity;
+    private int gravity;
+    private int maxJumpHeight;
+    private int dx;
 
 
     public Mario(int x, int y) {
         this.x = x;
         this.y = y;
-        this.movingRight = true; // Initialement Mario regarde à droite
-        this.isMoving = false; // Initialement Mario n'est pas en mouvement
-        this.saut = false; // Initialement Mario ne saute pas
+        this.movingRight = true;
+        this.isMoving = false;
+        this.isGrounded = true;
+        this.isJumping = false;
+        this.saut = false;
         this.compteur = 0;
-        this.compteurSaut = 0;
-        this.frequence = 10; // Vous pouvez ajuster la fréquence pour accélérer ou ralentir l'animation
-        updateAnimation(); // Initialiser avec l'image d'arrêt
+        this.frequence = 10;
+        dx = 0;
+
+        jumpVelocity = 20; // Vitesse initiale de saut
+        gravity = -1; // Valeur négative pour simuler la gravité
+        maxJumpHeight = 100; // Hauteur maximale du saut
+        updateAnimation(); // Initialiser l'animation par défaut
     }
 
     public void updateAnimation() {
-        String imagePath; // Stocker le chemin de l'image à afficher
-    
-        // Vérifier si Mario saute
+        String imagePath;
+        
+        // Gestion des animations selon les états
         if (saut) {
-            // Animation de saut
-            if (movingRight) {
-                imagePath = "images/marioSautDroite.png"; // Image de Mario sautant à droite
-            } else {
-                imagePath = "images/marioSautGauche.png"; // Image de Mario sautant à gauche
-            }
+            imagePath = movingRight ? "images/marioSautDroite.png" : "images/marioSautGauche.png";
         } else if (isMoving) {
-            // Si Mario est en mouvement et n'est pas en train de sauter
-            if (movingRight) {
-                if (compteur / frequence % 2 == 0) {
-                    imagePath = "images/marioMarcheDroite.png"; // Mario marchant à droite
-                } else {
-                    imagePath = "images/marioArretDroite.png"; // Mario arrêté à droite
-                }
-            } else {
-                if (compteur / frequence % 2 == 0) {
-                    imagePath = "images/marioMarcheGauche.png"; // Mario marchant à gauche
-                } else {
-                    imagePath = "images/marioArretGauche.png"; // Mario arrêté à gauche
-                }
-            }
+            imagePath = (compteur / frequence % 2 == 0) 
+                ? (movingRight ? "images/marioMarcheDroite.png" : "images/marioMarcheGauche.png")
+                : (movingRight ? "images/marioArretDroite.png" : "images/marioArretGauche.png");
         } else {
-            // Animation d'arrêt (si Mario ne bouge pas)
-            if (movingRight) {
-                imagePath = "images/marioArretDroite.png"; // Mario arrêté à droite
-            } else {
-                imagePath = "images/marioArretGauche.png"; // Mario arrêté à gauche
-            }
+            imagePath = movingRight ? "images/marioArretDroite.png" : "images/marioArretGauche.png";
         }
-    
-        // Si Mario touche le sol (retour à l'animation de marche après un saut)
-        if (isGrounded && !saut) {
-            if (isMoving) {
-                // Retour à l'animation de marche si Mario se déplace
-                if (movingRight) {
-                    imagePath = "images/marioMarcheDroite.png";
-                } else {
-                    imagePath = "images/marioMarcheGauche.png";
-                }
-            } else {
-                // Si Mario ne se déplace pas, animation d'arrêt
-                if (movingRight) {
-                    imagePath = "images/marioArretDroite.png";
-                } else {
-                    imagePath = "images/marioArretGauche.png";
-                }
-            }
-        }
-    
-        // Chargement de l'image de l'animation
+
+        // Charger la texture
         try {
             this.texture = new Texture(imagePath);
         } catch (Exception e) {
-            System.err.println("Erreur de chargement de l'image : " + imagePath);
-            this.texture = new Texture("images/default.png"); // Image par défaut en cas d'erreur
+            System.err.println("Erreur lors du chargement de l'image : " + imagePath);
+            this.texture = new Texture("images/default.png");
         }
-    
-        compteur++; // Incrémentation pour l'animation de marche
+
+        compteur++; // Incrémenter pour les animations
     }
-
-    
-    
-    public void climb(boolean up) {
-        if (up) {
-            this.y += 5; // Monter de 5 unités
-        } else {
-            this.y -= 5; // Descendre de 5 unités
-        }
-    
-        // Empêcher Mario de dépasser les limites verticales
-        if (this.y < getHauteurSol()) {
-            this.y = getHauteurSol();
-        } else if (this.y > getHauteurPlafond()) {
-            this.y = getHauteurPlafond();
-        }
-    }
-    
-    public void jump(int hauteurSol) {
-        if (!isJumping) { // Vérifie si Mario saute déjà
-            isJumping = true;
-            this.vy = 15; // Vitesse initiale du saut
-        }
-    }
-    
-    
-
-public void update(int hauteurSol) {
-    // Gestion du saut
-    if (saut) {
-        if (compteurSaut <= DUREE_SAUT / 2) {
-            if (y < positionSautInitiale + HAUTEUR_SAUT && y < PLAFOND) {
-                y += (int) (HAUTEUR_SAUT / (DUREE_SAUT / 2)); // Montée
-            }
-        } else if (compteurSaut < DUREE_SAUT) {
-            y -= (int) (HAUTEUR_SAUT / (DUREE_SAUT / 2)); // Descente
-        }
-
-        if (y <= hauteurSol) {
-            y = hauteurSol; // Mario touche le sol
-            saut = false;
-            peutDoubleSaut = false;
-        } else if (y >= PLAFOND) {
-            y = PLAFOND; // Mario atteint le plafond
-            saut = false;
-        }
-
-        compteurSaut++;
-    }
-
-    // Gestion de l'animation
-    updateAnimation();
-}
 
    
+    public void climb(boolean up) {
+        if (up) {
+            this.y += 5;
+        } else {
+            this.y -= 5;
+        }
 
-// Méthode pour gérer les différentes animations ou états de Mario
-public enum MarioState {
-    REPOS, MARCHER, SAUTER
-}
-
-
-public void setState(MarioState state) {
-    this.currentState = state;
-}
-
+        // Empêcher Mario de dépasser les limites
+        if (this.y < getHauteurSol()) this.y = getHauteurSol();
+        if (this.y > getHauteurPlafond()) this.y = getHauteurPlafond();
+    }
 
     
-public int getHauteurSol() {
-    return 0; // Retourne la hauteur minimale (sol)
-}
+    public void update() {
+        if (isJumping) {
+            y += jumpVelocity;
+            jumpVelocity += gravity; // Appliquer la gravité
 
-public int getHauteurPlafond() {
-    return PLAFOND; // Retourne la hauteur maximale (plafond)
-}
+            // Vérifier si Mario revient au sol
+            if (y <= GROUND_HEIGHT) {
+                y = GROUND_HEIGHT;
+                isJumping = false;
+                jumpVelocity = 20; // Réinitialiser la vitesse de saut
+            }
+        }
 
+        // Gérer le déplacement horizontal
+        x += dx;
 
-    // Getter pour obtenir la texture de Mario
-    public Texture getTexture() {
-        return texture;
-    }
+        // Mettre à jour l'état du mouvement
+        updateAnimation(); 
+        }
 
-    // Getter pour la position X de Mario
-    public int getX() {
-        return x;
-    }
-
-    // Getter pour la position Y de Mario
-    public int getY() {
-        return y;
+    public void jump(int hauteurSol) {
+        if (!isJumping) { // Vérifier que Mario ne saute pas déjà
+            isJumping = true;
+            y = hauteurSol; // Lancer le saut depuis la hauteur actuelle (le sol)
+            jumpVelocity = 20; // Initialiser la vitesse de saut
+        }
     }
 
     public void move(int dx) {
         this.x += dx;
-        isMoving = dx != 0; // Déterminer automatiquement si Mario bouge
+        isMoving = dx != 0;
         updateAnimation();
     }
-    
 
-    // Définir la direction du mouvement de Mario
     public void setDirection(boolean movingRight) {
         this.movingRight = movingRight;
-        updateAnimation(); // Mettre à jour l'animation selon la direction
+        updateAnimation();
     }
 
-    // Définir si Mario est en mouvement
     public void setMoving(boolean isMoving) {
         this.isMoving = isMoving;
-        updateAnimation(); // Mettre à jour l'animation en fonction du mouvement
+        updateAnimation();
     }
 
+    public int getHauteurSol() {
+        return 0;
+    }
+
+    public int getHauteurPlafond() {
+        return PLAFOND;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public Texture getTexture() {
+        return texture;
+    }
+
+    public boolean isJumping() {
+        return isJumping;
+    }
 }
