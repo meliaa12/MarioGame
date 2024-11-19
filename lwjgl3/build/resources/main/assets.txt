@@ -7,5 +7,7 @@ images/marioArretGauche.png
 images/marioMarcheDroite copy.png
 images/marioMarcheDroite.png
 images/marioMarcheGauche.png
+images/marioSautDroite.png
+images/marioSautGauche.png
 images/tuyauRouge.png
 libgdx.png
