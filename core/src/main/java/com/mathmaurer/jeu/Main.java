@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class Main extends ApplicationAdapter {
     private SpriteBatch batch;
-    private Scene scene;
+    public static Scene scene; // Rendre `scene` public
 
     @Override
     public void create() {
@@ -15,16 +15,18 @@ public class Main extends ApplicationAdapter {
         scene = new Scene(); 
     }
 
+    public static Scene getScene() {
+        return scene;
+    }
+
     @Override
     public void render() {
         // Appelle la méthode render de la scène
-        scene.render(Gdx.graphics.getDeltaTime());
     }
 
     @Override
     public void resize(int width, int height) {
         // Mise à jour de la taille de l'écran si nécessaire
-        scene.resize(width, height);
     }
 
     @Override
