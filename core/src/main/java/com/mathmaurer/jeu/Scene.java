@@ -7,20 +7,18 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.mathmaurer.objets.Block;
+import com.mathmaurer.objets.Objet;
 import com.mathmaurer.objets.TuyauRouge;
 import com.mathmaurer.personnages.Mario;
 
 public class Scene implements Screen {
     //**** Variables ****//
-    private Texture imgFond1, imgFond2, imgChateau1, imgDepart;
+    private Texture imgFond1, imgFond2, imgChateau1, imgDepart, imgChateauFin, imgDrapeau;
     private SpriteBatch batch;
-    private Stage stage;
+   
 
     private int xFond1, xFond2, dx, xPos;
     private final int VITESSE_FOND = 2;
@@ -44,13 +42,15 @@ public class Scene implements Screen {
         this.xPos = 220;
         this.aDeplaceDroite = false;
         this.departAtteint = false;
-        this.stage = new Stage(new StretchViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
+        // this.stage = new Stage(new StretchViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
 
         // Chargement des images
         imgFond1 = new Texture("images/fondEcran.png");
         imgFond2 = new Texture("images/fondEcran.png");
         imgChateau1 = new Texture("images/chateau1.png");
         imgDepart = new Texture("images/depart.png");
+        imgChateauFin = new Texture("images/chateauFin.png");
+        imgDrapeau = new Texture("images/drapeau.png");
 
         batch = new SpriteBatch();
 
@@ -63,13 +63,29 @@ public class Scene implements Screen {
 
         // Ajouter des tuyaux rouges
         tuyauxRouges.add(new TuyauRouge(600, 55));
-        tuyauxRouges.add(new TuyauRouge(800, 55));
         tuyauxRouges.add(new TuyauRouge(1000, 55));
+        tuyauxRouges.add(new TuyauRouge(1600, 55));
+        tuyauxRouges.add(new TuyauRouge(1900, 55));
+        tuyauxRouges.add(new TuyauRouge(2500, 55));
+        tuyauxRouges.add(new TuyauRouge(3000, 55));
+        tuyauxRouges.add(new TuyauRouge(3800, 55));
+        tuyauxRouges.add(new TuyauRouge(4500, 55));
+
 
         // Ajouter des blocs
         blocs.add(new Block(400, 180));
-        blocs.add(new Block(420, 180));
-        blocs.add(new Block(440, 180));
+        blocs.add(new Block(1200, 180));
+        blocs.add(new Block(1270, 170));
+        blocs.add(new Block(1340, 160));
+        blocs.add(new Block(2000, 180));
+        blocs.add(new Block(2600, 160));
+        blocs.add(new Block(2650, 180));
+        blocs.add(new Block(3500, 160));
+        blocs.add(new Block(3550, 140));
+        blocs.add(new Block(4000, 170));
+        blocs.add(new Block(4200, 200));
+        blocs.add(new Block(4300, 210));
+
 
         // Position limite de départ pour Mario
         positionLimiteDepart = 220 + imgDepart.getWidth();
@@ -117,21 +133,44 @@ public class Scene implements Screen {
 
     @Override
     public void render(float delta) {
-        // Mettre à jour l'état et l'animation de Mario
-        mario.update(HAUTEUR_SOL); // Mettre à jour l'état de Mario (saut, animation, etc.)
+      
+         // Mettre à jour l'état et l'animation de Mario
+        List<Objet> objets = new ArrayList<>();
+        objets.addAll(tuyauxRouges);
+        objets.addAll(blocs);
+        mario.update(HAUTEUR_SOL, objets); // Mettre à jour l'état de Mario (saut, animation, etc.)
 
         // Déplacer Mario et le fond
         deplacementMario();
         deplacementFond();
         deplacementObjets();
 
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); // Effacer l'écran
+        gererCollisions();
+
+        // Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); // Effacer l'écran
         // Commencer le dessin avec le batch
         batch.begin();
 
         // Dessiner les éléments de l'arrière-plan
         batch.draw(imgFond1, xFond1, 0);
         batch.draw(imgFond2, xFond2, 0);
+
+        // Dessiner le château et le panneau
+
+        if (!departAtteint) {
+            batch.draw(imgChateau1, 10 + xFond1, 60);
+            batch.draw(imgDepart, 200 + xFond1, 60);
+    
+            // Vérifier si Mario a dépassé la position limite de départ
+            if (mario.getX() >= positionLimiteDepart + imgDepart.getWidth()) {
+                departAtteint = true;
+            }
+        }
+
+         // Dessiner le château de fin et le drapeau
+         batch.draw(imgChateauFin, 5000, 55);
+         batch.draw(imgDrapeau, 4950, 55);
+ 
 
         // Dessiner Mario à sa position actuelle
         mario.dessine(batch);
@@ -150,6 +189,7 @@ public class Scene implements Screen {
         batch.end();
     }
 
+    //Getters 
     public int getxPos() {
         return xPos;
     }
@@ -158,6 +198,7 @@ public class Scene implements Screen {
         return dx;
     }
 
+    
     private void deplacementFond() {
         // Déplacement du fond en fonction de la vitesse de Mario
         xFond1 -= dx;
@@ -198,6 +239,26 @@ public class Scene implements Screen {
         // Déplacer les blocs
         for (Block bloc : blocs) {
             bloc.setX(bloc.getX() - dx);
+        }
+    }
+
+    private void gererCollisions() {
+        // Gérer les collisions entre Mario et les tuyaux rouges
+        for (TuyauRouge tuyau : tuyauxRouges) {
+            if (mario.contactAvant(tuyau) || mario.contactArriere(tuyau) || mario.contactDessous(tuyau) || mario.contactDessus(tuyau)) {
+                // Gérer la collision (par exemple, arrêter le mouvement de Mario)
+                mario.setMarche(false);
+                dx = 0;
+            }
+        }
+
+        // Gérer les collisions entre Mario et les blocs
+        for (Block bloc : blocs) {
+            if (mario.contactAvant(bloc) || mario.contactArriere(bloc) || mario.contactDessous(bloc) || mario.contactDessus(bloc)) {
+                // Gérer la collision (par exemple, arrêter le mouvement de Mario)
+                mario.setMarche(false);
+                dx = 0;
+            }
         }
     }
 

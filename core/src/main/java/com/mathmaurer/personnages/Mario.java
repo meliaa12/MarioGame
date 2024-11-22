@@ -1,8 +1,10 @@
 package com.mathmaurer.personnages;
 
+import java.util.List;
+
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-
+import com.mathmaurer.objets.Objet;
 
 public class Mario extends Personnage {
     private boolean isJumping = false;
@@ -10,62 +12,81 @@ public class Mario extends Personnage {
     private static final int GRAVITY = -1; // Gravité qui affecte la vitesse verticale
     private static final int JUMP_STRENGTH = 15; // Force du saut
 
+    private Texture textureMarioSautDroite, textureMarioSautGauche;
+
     public Mario(float x, float y, float largeur, float hauteur) {
         super(x, y, largeur, hauteur);
+        // Charger les textures spécifiques à Mario
+        textureMarioSautDroite = new Texture("images/marioSautDroite.png");
+        textureMarioSautGauche = new Texture("images/marioSautGauche.png");
     }
 
     @Override
     public void dessine(SpriteBatch batch) {
-        String imagePath;
+        Texture texture;
 
         if (isJumping) {
             if (versDroite) {
-                imagePath = "images/marioSautDroite.png";
+                texture = textureMarioSautDroite;
             } else {
-                imagePath = "images/marioSautGauche.png";
+                texture = textureMarioSautGauche;
             }
         } else if (marche) {
             compteur++;
             if (versDroite) {
                 if (compteur / 5 % 2 == 0) {
-                    imagePath = "images/marioMarcheDroite.png";
+                    texture = textureMarioMarcheDroite;
                 } else {
-                    imagePath = "images/marioArretDroite.png";
+                    texture = textureMarioArretDroite;
                 }
             } else {
                 if (compteur / 5 % 2 == 0) {
-                    imagePath = "images/marioMarcheGauche.png";
+                    texture = textureMarioMarcheGauche;
                 } else {
-                    imagePath = "images/marioArretGauche.png";
+                    texture = textureMarioArretGauche;
                 }
             }
         } else {
             if (versDroite) {
-                imagePath = "images/marioArretDroite.png";
+                texture = textureMarioArretDroite;
             } else {
-                imagePath = "images/marioArretGauche.png";
+                texture = textureMarioArretGauche;
             }
         }
 
-        try {
-            Texture texture = new Texture(imagePath);
-            batch.draw(texture, getX(), getY(), getLargeur(), getHauteur());
-        } catch (Exception e) {
-            System.err.println("Erreur de chargement de l'image : " + imagePath);
-            Texture texture = new Texture("images/default.png");
-            batch.draw(texture, getX(), getY(), getLargeur(), getHauteur());
-        }
+        batch.draw(texture, getX(), getY(), getLargeur(), getHauteur());
     }
 
-    public void update(int hauteurSol) {
+    public void update(int hauteurSol, List<Objet> objets) {
         if (isJumping) {
             vy += GRAVITY; // Appliquer la gravité
             setY(getY() + vy); // Mettre à jour la position verticale
+
+            for (Objet objet : objets) {
+                if (contactDessous(objet)) {
+                    setY(objet.getY() + objet.getHauteur());
+                    isJumping = false;
+                    vy = 0;
+                    break;
+                }
+            }
 
             if (getY() <= hauteurSol) {
                 setY(hauteurSol); // Mario touche le sol
                 isJumping = false;
                 vy = 0;
+            }
+        } else {
+            boolean onGround = false;
+            for (Objet objet : objets) {
+                if (contactDessus(objet)) {
+                    setY(objet.getY() + objet.getHauteur());
+                    onGround = true;
+                    break;
+                }
+            }
+            if (!onGround && getY() > hauteurSol) {
+                isJumping = true;
             }
         }
     }

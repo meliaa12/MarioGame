@@ -14,7 +14,7 @@ public class Personnage {
     protected boolean versDroite; // Vrai quand le personnage est tourné vers la droite
     public int compteur; // Compteur des pas du personnage
     protected boolean vivant; // Vrai si le personnage est vivant
-    private Texture textureMarioArretDroite, textureMarioArretGauche, textureMarioMarcheDroite, textureMarioMarcheGauche;
+    protected Texture textureMarioArretDroite, textureMarioArretGauche, textureMarioMarcheDroite, textureMarioMarcheGauche;
 
     //**** CONSTRUCTEUR ****//
     public Personnage(float x, float y, float largeur, float hauteur){
@@ -64,17 +64,17 @@ public class Personnage {
             }
         } else {
             compteur++;
-            if (compteur / 5 == 0) {  // Utilisation d'un intervalle pour l'animation
-                if (versDroite) {
-                    batch.draw(textureMarioArretDroite, x, y, largeur, hauteur);
-                } else {
-                    batch.draw(textureMarioArretGauche, x, y, largeur, hauteur);
-                }
-            } else {
+            if (compteur / 5 % 2 == 0) {  // Utilisation d'un intervalle pour l'animation
                 if (versDroite) {
                     batch.draw(textureMarioMarcheDroite, x, y, largeur, hauteur);
                 } else {
                     batch.draw(textureMarioMarcheGauche, x, y, largeur, hauteur);
+                }
+            } else {
+                if (versDroite) {
+                    batch.draw(textureMarioArretDroite, x, y, largeur, hauteur);
+                } else {
+                    batch.draw(textureMarioArretGauche, x, y, largeur, hauteur);
                 }
             }
             if (compteur == 10) {  // Réinitialiser le compteur pour l'animation
@@ -82,7 +82,6 @@ public class Personnage {
             }
         }
     }
-
 
     // Déplacement du personnage
     public void deplacement() {
@@ -92,25 +91,25 @@ public class Personnage {
     }
 
     // Détection de collision avant
-    protected boolean contactAvant(Objet objet) {
+    public boolean contactAvant(Objet objet) {
         return !(this.x + this.largeur < objet.getX() || this.x + this.largeur > objet.getX() + 5 ||
                 this.y + this.hauteur <= objet.getY() || this.y >= objet.getY() + objet.getHauteur());
     }
 
     // Détection de collision arrière
-    protected boolean contactArriere(Objet objet) {
+    public boolean contactArriere(Objet objet) {
         return !(this.x > objet.getX() + objet.getLargeur() || this.x + this.largeur < objet.getX() + objet.getLargeur() - 5 ||
                 this.y + this.hauteur <= objet.getY() || this.y >= objet.getY() + objet.getHauteur());
     }
 
     // Détection de collision sous
-    protected boolean contactDessous(Objet objet) {
+    public boolean contactDessous(Objet objet) {
         return !(this.x + this.largeur < objet.getX() + 5 || this.x > objet.getX() + objet.getLargeur() - 5 ||
                 this.y + this.hauteur < objet.getY() || this.y + this.hauteur > objet.getY() + 5);
     }
 
     // Détection de collision dessus
-    protected boolean contactDessus(Objet objet) {
+    public boolean contactDessus(Objet objet) {
         return !(this.x + this.largeur < objet.getX() + 5 || this.x > objet.getX() + objet.getLargeur() - 5 ||
                 this.y < objet.getY() + objet.getHauteur() || this.y > objet.getY() + objet.getHauteur() + 5);
     }
@@ -121,7 +120,7 @@ public class Personnage {
     }
 
     // Détection de contact avec un autre personnage
-    protected boolean contactAvant(Personnage personnage) {
+    public boolean contactAvant(Personnage personnage) {
         if (this.isVersDroite()) {
             return !(this.x + this.largeur < personnage.getX() || this.x + this.largeur > personnage.getX() + 5 ||
                     this.y + this.hauteur <= personnage.getY() || this.y >= personnage.getY() + personnage.getHauteur());
@@ -130,12 +129,12 @@ public class Personnage {
         }
     }
 
-    protected boolean contactArriere(Personnage personnage) {
+    public boolean contactArriere(Personnage personnage) {
         return !(this.x > personnage.getX() + personnage.getLargeur() || this.x + this.largeur < personnage.getX() + personnage.getLargeur() - 5 ||
                 this.y + this.hauteur <= personnage.getY() || this.y >= personnage.getY() + personnage.getHauteur());
     }
 
-    protected boolean contactDessous(Personnage personnage) {
+    public boolean contactDessous(Personnage personnage) {
         return !(this.x + this.largeur < personnage.getX() || this.x > personnage.getX() + personnage.getLargeur() ||
                 this.y + this.hauteur < personnage.getY() || this.y + this.hauteur > personnage.getY());
     }
