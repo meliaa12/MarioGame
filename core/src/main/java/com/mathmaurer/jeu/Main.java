@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class Main extends ApplicationAdapter {
     private SpriteBatch batch;
-    private Scene scene;
+    public static Scene scene;
 
     @Override
     public void create() {
