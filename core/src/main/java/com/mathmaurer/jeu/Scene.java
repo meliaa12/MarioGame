@@ -7,6 +7,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.mathmaurer.objets.Block;
@@ -18,10 +19,10 @@ public class Scene implements Screen {
     //**** Variables ****//
     private Texture imgFond1, imgFond2, imgChateau1, imgDepart, imgChateauFin, imgDrapeau;
     private SpriteBatch batch;
-   
 
     private int xFond1, xFond2, dx, xPos;
-    private final int VITESSE_FOND = 2;
+    private final int VITESSE_FOND = 4; // Vitesse de déplacement de l'écran
+    private final int VITESSE_MARIO = 2; // Vitesse de déplacement de Mario
     private final int largeurFond = 700;
     private int positionLimiteDepart;
     private boolean aDeplaceDroite;
@@ -42,7 +43,6 @@ public class Scene implements Screen {
         this.xPos = 220;
         this.aDeplaceDroite = false;
         this.departAtteint = false;
-        // this.stage = new Stage(new StretchViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
 
         // Chargement des images
         imgFond1 = new Texture("images/fondEcran.png");
@@ -71,7 +71,6 @@ public class Scene implements Screen {
         tuyauxRouges.add(new TuyauRouge(3800, 55));
         tuyauxRouges.add(new TuyauRouge(4500, 55));
 
-
         // Ajouter des blocs
         blocs.add(new Block(400, 180));
         blocs.add(new Block(1200, 180));
@@ -86,7 +85,6 @@ public class Scene implements Screen {
         blocs.add(new Block(4200, 200));
         blocs.add(new Block(4300, 210));
 
-
         // Position limite de départ pour Mario
         positionLimiteDepart = 220 + imgDepart.getWidth();
         xPos = positionLimiteDepart;
@@ -94,21 +92,33 @@ public class Scene implements Screen {
         InputAdapter inputAdapter = new InputAdapter() {
             @Override
             public boolean keyDown(int keycode) {
-                if (keycode == Input.Keys.RIGHT) {
-                    dx = VITESSE_FOND; // Vitesse du déplacement vers la droite
-                    mario.setVersDroite(true); // Mario se déplace à droite
-                    mario.setMarche(true); // Mario est en mouvement
-                }
-                if (keycode == Input.Keys.LEFT) {
-                    dx = -VITESSE_FOND; // Vitesse du déplacement vers la gauche
-                    mario.setVersDroite(false); // Mario se déplace à gauche
-                    mario.setMarche(true); // Mario est en mouvement
-                }
-                if (keycode == Input.Keys.SPACE) {
-                    mario.jump(HAUTEUR_SOL); // Mario saute
-                }
-                if (keycode == Input.Keys.UP) {
-                    mario.climb(true, HAUTEUR_SOL, HAUTEUR_PLAFOND); // Monte
+                if (mario.isVivant()) {
+                    if (keycode == Input.Keys.RIGHT) {
+                        if (xPos == -1) {
+                            xPos = 0;
+                            xFond1 = -50;
+                            xFond2 = 750;
+                        }
+                        mario.setMarche(true);
+                        mario.setVersDroite(true);
+                        dx = VITESSE_FOND;
+                    }
+                    if (keycode == Input.Keys.LEFT) {
+                        if (xPos == 4431) {
+                            xPos = 4430;
+                            xFond1 = -50;
+                            xFond2 = 750;
+                        }
+                        mario.setMarche(true);
+                        mario.setVersDroite(false);
+                        dx = -VITESSE_FOND;
+                    }
+                    if (keycode == Input.Keys.SPACE) {
+                        mario.jump(HAUTEUR_SOL);
+                    }
+                    if (keycode == Input.Keys.UP) {
+                        mario.climb(true, HAUTEUR_SOL, HAUTEUR_PLAFOND);
+                    }
                 }
                 return true;
             }
@@ -116,8 +126,8 @@ public class Scene implements Screen {
             @Override
             public boolean keyUp(int keycode) {
                 if (keycode == Input.Keys.RIGHT || keycode == Input.Keys.LEFT) {
-                    dx = 0; // Arrêter le mouvement lorsque la touche est relâchée
-                    mario.setMarche(false); // Mario arrête de bouger
+                    mario.setMarche(false);
+                    dx = 0;
                 }
                 return false;
             }
@@ -133,8 +143,7 @@ public class Scene implements Screen {
 
     @Override
     public void render(float delta) {
-      
-         // Mettre à jour l'état et l'animation de Mario
+        // Mettre à jour l'état et l'animation de Mario
         List<Objet> objets = new ArrayList<>();
         objets.addAll(tuyauxRouges);
         objets.addAll(blocs);
@@ -147,7 +156,7 @@ public class Scene implements Screen {
 
         gererCollisions();
 
-        // Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); // Effacer l'écran
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); // Effacer l'écran
         // Commencer le dessin avec le batch
         batch.begin();
 
@@ -156,21 +165,19 @@ public class Scene implements Screen {
         batch.draw(imgFond2, xFond2, 0);
 
         // Dessiner le château et le panneau
-
         if (!departAtteint) {
             batch.draw(imgChateau1, 10 + xFond1, 60);
             batch.draw(imgDepart, 200 + xFond1, 60);
-    
+
             // Vérifier si Mario a dépassé la position limite de départ
             if (mario.getX() >= positionLimiteDepart + imgDepart.getWidth()) {
                 departAtteint = true;
             }
         }
 
-         // Dessiner le château de fin et le drapeau
-         batch.draw(imgChateauFin, 5000, 55);
-         batch.draw(imgDrapeau, 4950, 55);
- 
+        // Dessiner le château de fin et le drapeau
+        batch.draw(imgChateauFin, 5000, 55);
+        batch.draw(imgDrapeau, 4950, 55);
 
         // Dessiner Mario à sa position actuelle
         mario.dessine(batch);
@@ -189,20 +196,43 @@ public class Scene implements Screen {
         batch.end();
     }
 
-    //Getters 
+    // Getters et Setters
     public int getxPos() {
         return xPos;
+    }
+
+    public void setxPos(int xPos) {
+        this.xPos = xPos;
     }
 
     public int getDx() {
         return dx;
     }
 
-    
+    public void setDx(int dx) {
+        this.dx = dx;
+    }
+
+    public int getxFond1() {
+        return xFond1;
+    }
+
+    public void setxFond1(int xFond1) {
+        this.xFond1 = xFond1;
+    }
+
+    public int getxFond2() {
+        return xFond2;
+    }
+
+    public void setxFond2(int xFond2) {
+        this.xFond2 = xFond2;
+    }
+
     private void deplacementFond() {
         // Déplacement du fond en fonction de la vitesse de Mario
-        xFond1 -= dx;
-        xFond2 -= dx;
+        xFond1 -= dx * 2; // Déplacement plus rapide du fond
+        xFond2 -= dx * 2;
 
         // Réinitialisation du fond lorsqu'il sort de l'écran
         if (xFond1 <= -largeurFond) {
@@ -214,9 +244,11 @@ public class Scene implements Screen {
     }
 
     private void deplacementMario() {
+        mario.setX(Gdx.graphics.getWidth() / 2 - mario.getLargeur() / 2);
+
         // Déplacement de Mario avec la position xPos
         if (dx != 0) {
-            mario.setX(mario.getX() + dx); // Déplacement de Mario
+            mario.setX(mario.getX() + dx * VITESSE_MARIO); // Déplacement de Mario
         }
 
         // Limite de départ
@@ -233,12 +265,12 @@ public class Scene implements Screen {
     private void deplacementObjets() {
         // Déplacer les tuyaux rouges
         for (TuyauRouge tuyau : tuyauxRouges) {
-            tuyau.setX(tuyau.getX() - dx);
+            tuyau.setX(tuyau.getX() - dx * 2); // Déplacement plus rapide des objets
         }
 
         // Déplacer les blocs
         for (Block bloc : blocs) {
-            bloc.setX(bloc.getX() - dx);
+            bloc.setX(bloc.getX() - dx * 2); // Déplacement plus rapide des objets
         }
     }
 
@@ -281,12 +313,14 @@ public class Scene implements Screen {
         imgFond2.dispose();
         imgChateau1.dispose();
         imgDepart.dispose();
+        imgChateauFin.dispose();
+        imgDrapeau.dispose();
         for (TuyauRouge tuyau : tuyauxRouges) {
             tuyau.dispose();
         }
         for (Block bloc : blocs) {
             bloc.dispose();
         }
-        // Libérer la texture de Mario
+        // mario.getTexture().dispose(); // Libérer la texture de Mario
     }
 }
