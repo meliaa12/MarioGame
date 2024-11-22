@@ -1,0 +1,4 @@
+600,55,images/tuyauRouge.png
+400,180,images/bloc.png
+420,180,images/bloc.png
+440,180,images/bloc.png
