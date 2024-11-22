@@ -16,7 +16,7 @@ public class Lwjgl3Launcher {
 
     private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
         Lwjgl3ApplicationConfiguration configuration = new Lwjgl3ApplicationConfiguration();
-        configuration.setTitle("marvin"); // Titre de la fenêtre
+        configuration.setTitle("Mario"); // Titre de la fenêtre
         configuration.useVsync(true); // Activer la synchronisation verticale
         // Paramètre FPS en fonction du taux de rafraîchissement du moniteur
         configuration.setForegroundFPS(Lwjgl3ApplicationConfiguration.getDisplayMode().refreshRate + 1);

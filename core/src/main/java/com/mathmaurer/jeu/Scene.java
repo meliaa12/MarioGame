@@ -13,7 +13,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.mathmaurer.objets.Block;
 import com.mathmaurer.objets.Objet;
 import com.mathmaurer.objets.TuyauRouge;
+import com.mathmaurer.personnages.Champ;
 import com.mathmaurer.personnages.Mario;
+import com.mathmaurer.personnages.Tortue;
 
 public class Scene implements Screen {
     //**** Variables ****//
@@ -31,6 +33,8 @@ public class Scene implements Screen {
     private Mario mario;
     private List<TuyauRouge> tuyauxRouges;
     private List<Block> blocs;
+    private List<Champ> champs;
+    private List<Tortue> tortues;
 
     private final int HAUTEUR_SOL = 55; // Sol à y = 0
     private final int HAUTEUR_PLAFOND = 300; // Par exemple, plafond à y = 300
@@ -60,6 +64,8 @@ public class Scene implements Screen {
         // Initialisation des tuyaux et des blocs
         tuyauxRouges = new ArrayList<>();
         blocs = new ArrayList<>();
+        champs = new ArrayList<>();
+        tortues = new ArrayList<>();
 
         // Ajouter des tuyaux rouges
         tuyauxRouges.add(new TuyauRouge(600, 55));
@@ -84,6 +90,27 @@ public class Scene implements Screen {
         blocs.add(new Block(4000, 170));
         blocs.add(new Block(4200, 200));
         blocs.add(new Block(4300, 210));
+
+         // Ajouter des champs
+        champs.add(new Champ(800, 55));
+        champs.add(new Champ(1100, 55));
+        champs.add(new Champ(2100, 55));
+        champs.add(new Champ(2400, 55));
+        champs.add(new Champ(3200, 55));
+        champs.add(new Champ(3500, 55));
+        champs.add(new Champ(3700, 55));
+        champs.add(new Champ(4500, 55));
+
+        // Ajouter des tortues
+        tortues.add(new Tortue(950, 55));
+        tortues.add(new Tortue(1500, 55));
+        tortues.add(new Tortue(1800, 55));
+        tortues.add(new Tortue(2400, 55));
+        tortues.add(new Tortue(3100, 55));
+        tortues.add(new Tortue(3600, 55));
+        tortues.add(new Tortue(3900, 55));
+        tortues.add(new Tortue(4200, 55));
+        tortues.add(new Tortue(4400, 55));
 
         // Position limite de départ pour Mario
         positionLimiteDepart = 220 + imgDepart.getWidth();
@@ -192,6 +219,16 @@ public class Scene implements Screen {
             batch.draw(bloc.getTextureObjet(), bloc.getX(), bloc.getY());
         }
 
+        // Dessiner les champs
+        for (Champ champ : champs) {
+            champ.dessine(batch);
+        }
+
+        // Dessiner les tortues
+        for (Tortue tortue : tortues) {
+            tortue.dessine(batch);
+        }
+
         // Fin du dessin
         batch.end();
     }
@@ -272,6 +309,16 @@ public class Scene implements Screen {
         for (Block bloc : blocs) {
             bloc.setX(bloc.getX() - dx * 2); // Déplacement plus rapide des objets
         }
+
+        // Déplacer les champs
+        for (Champ champ : champs) {
+            champ.setX(champ.getX() - dx * 2); // Déplacement plus rapide des objets
+        }
+
+        // Déplacer les tortues
+        for (Tortue tortue : tortues) {
+            tortue.setX(tortue.getX() - dx * 2); // Déplacement plus rapide des objets
+        }
     }
 
     private void gererCollisions() {
@@ -290,6 +337,32 @@ public class Scene implements Screen {
                 // Gérer la collision (par exemple, arrêter le mouvement de Mario)
                 mario.setMarche(false);
                 dx = 0;
+            }
+        }
+
+         // Gérer les collisions entre Mario et les champs
+         for (Champ champ : champs) {
+            if (mario.contactAvant(champ) || mario.contactArriere(champ) || mario.contactDessous(champ)) {
+                if (mario.contactDessous(champ)) {
+                    champ.meurt(); // Mario écrase le champ
+                } else {
+                    // Gérer la collision (par exemple, arrêter le mouvement de Mario)
+                    mario.setMarche(false);
+                    dx = 0;
+                }
+            }
+        }
+
+        // Gérer les collisions entre Mario et les tortues
+        for (Tortue tortue : tortues) {
+            if (mario.contactAvant(tortue) || mario.contactArriere(tortue) || mario.contactDessous(tortue) ) {
+                if (mario.contactDessous(tortue)) {
+                    tortue.mourir(); // Mario écrase la tortue
+                } else {
+                    // Gérer la collision (par exemple, arrêter le mouvement de Mario)
+                    mario.setMarche(false);
+                    dx = 0;
+                }
             }
         }
     }
@@ -320,6 +393,12 @@ public class Scene implements Screen {
         }
         for (Block bloc : blocs) {
             bloc.dispose();
+        }
+        for (Champ champ : champs) {
+            champ.dispose();
+        }
+        for (Tortue tortue : tortues) {
+            tortue.dispose();
         }
         // mario.getTexture().dispose(); // Libérer la texture de Mario
     }
