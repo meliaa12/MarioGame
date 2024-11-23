@@ -130,4 +130,9 @@ public class Mario extends Personnage {
         // Utilisé pour le petit saut après avoir écrasé un ennemi
         this.vy = velocity;
     }
+
+     // Nouvelle méthode pour définir l'état de saut
+     public void setJumping(boolean isJumping) {
+        this.isJumping = isJumping;
+    }
 }
