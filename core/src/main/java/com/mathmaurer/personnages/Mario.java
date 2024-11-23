@@ -36,7 +36,9 @@ public class Mario extends Personnage {
 
     public void dessine(SpriteBatch batch) {
         Texture texture;
-        if (isJumping) {
+        if (!isVivant()) {
+            texture = textureMarioMeurt;
+        } else if (isJumping) {
             if (versDroite) {
                 texture = textureMarioSautDroite;
             } else {
@@ -116,13 +118,17 @@ public class Mario extends Personnage {
     }
 
     public void meurt() {
-        String str = "images/boom.png";
-        this.compteurMort++;
-        if (this.compteurMort > 100) {
-            str = "images/marioMeurt.png";
-            this.setY(this.getY() - 0);
-        }
-        this.textureMarioMeurt = new Texture(str);
+        // String str = "images/boom.png";
+        // this.compteurMort++;
+        // if (this.compteurMort > 100) {
+        //     str = "images/marioMeurt.png";
+        //     this.setY(this.getY() - 0);
+           
+        // }
+        // this.textureMarioMeurt = new Texture(str);
+
+        setVivant(false);
+       
     }
 
     // Nouvelle méthode pour définir la vitesse verticale
