@@ -1,3 +1,10 @@
+audio/baground.mp3
+audio/boum.wav
+audio/ecrasePersonnage.wav
+audio/partieGagnee.wav
+audio/partiePerdue.wav
+audio/piece.wav
+audio/saut.wav
 images/bloc.png
 images/boom.png
 images/champArretDroite.png

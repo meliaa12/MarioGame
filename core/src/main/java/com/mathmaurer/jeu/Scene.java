@@ -7,15 +7,23 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.mathmaurer.objets.Block;
 import com.mathmaurer.objets.Objet;
 import com.mathmaurer.objets.TuyauRouge;
 import com.mathmaurer.personnages.Champ;
 import com.mathmaurer.personnages.Mario;
 import com.mathmaurer.personnages.Tortue;
+
 
 public class Scene implements Screen {
     //**** Variables ****//
@@ -36,6 +44,28 @@ public class Scene implements Screen {
     private List<Champ> champs;
     private List<Tortue> tortues;
 
+     private boolean isInMenu;
+    private Stage stage;
+    private Table menuTable;
+    private BitmapFont font;
+    private String[] menuOptions = {"JOUER", "OPTIONS", "QUITTER"};
+    private Label[] menuLabels;
+    private int currentMenuOption;
+    private Texture menuBackground;
+    private InputAdapter menuInputProcessor;
+    private InputAdapter gameInputProcessor;
+
+    private Sound sound;
+    private Music backgroundMusic;
+    private Sound jumpSound;
+    private Sound coinSound;
+    private Sound dieSound;
+    private Sound powerUpSound;
+    private Sound powerDownSound;
+    private boolean isMusicEnabled = true;
+    private float musicVolume = 0.5f;
+    private float soundVolume = 1.0f;
+
     private final int HAUTEUR_SOL = 55; // Sol à y = 0
     private final int HAUTEUR_PLAFOND = 300; // Par exemple, plafond à y = 300
     
@@ -49,6 +79,11 @@ public class Scene implements Screen {
         this.aDeplaceDroite = false;
         this.departAtteint = false;
 
+        isInMenu = true;
+        stage = new Stage(new ScreenViewport());
+        font = new BitmapFont();
+        menuBackground = new Texture("images/fondEcran.png"); 
+
         // Chargement des images
         imgFond1 = new Texture("images/fondEcran.png");
         imgFond2 = new Texture("images/fondEcran.png");
@@ -56,6 +91,14 @@ public class Scene implements Screen {
         imgDepart = new Texture("images/depart.png");
         imgChateauFin = new Texture("images/chateauFin.png");
         imgDrapeau = new Texture("images/drapeau.png");
+
+        initializeInputProcessors();
+        
+        // Création du menu
+        createMenu();
+
+        initializeAudio();
+
 
         batch = new SpriteBatch();
 
@@ -117,60 +160,221 @@ public class Scene implements Screen {
         positionLimiteDepart = 220 + imgDepart.getWidth();
         xPos = positionLimiteDepart;
 
-        InputAdapter inputAdapter = new InputAdapter() {
+        // Cette méthode est appelée lorsque ce Screen devient le Screen actuel de l'application
+    }
+
+    private void initializeAudio() {
+        try {
+            // Vérifiez si le fichier audio de fond existe
+            if (Gdx.files.internal("audio/baground.mp3").exists()) {
+                backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/baground.mp3"));
+                backgroundMusic.setLooping(true); // Si le fichier est trouvé, on le met en boucle
+                backgroundMusic.play();
+                System.out.println("Musique de fond chargée avec succès !");
+            } else {
+                System.err.println("Erreur : fichier audio background_music.mp3 introuvable !");
+            }
+    
+            // Charger le son du saut
+            if (Gdx.files.internal("audio/saut.wav").exists()) {
+                jumpSound = Gdx.audio.newSound(Gdx.files.internal("audio/saut.wav"));
+            } else {
+                System.err.println("Erreur : fichier audio saut.wav introuvable !");
+            }
+    
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'initialisation des sons : " + e.getMessage());
+            e.printStackTrace();
+        }
+    
+    
+    
+        
+        backgroundMusic.setLooping(true);
+        backgroundMusic.setVolume(musicVolume);
+
+        // Charger les effets sonores
+        jumpSound = Gdx.audio.newSound(Gdx.files.internal("audio/saut.wav"));
+        coinSound = Gdx.audio.newSound(Gdx.files.internal("audio/piece.wav"));
+        dieSound = Gdx.audio.newSound(Gdx.files.internal("audio/partiePerdue.wav"));
+        powerUpSound = Gdx.audio.newSound(Gdx.files.internal("audio/partieGagnee.wav"));
+        powerDownSound = Gdx.audio.newSound(Gdx.files.internal("audio/boum.wav"));
+    }
+
+
+    private void initializeInputProcessors() {
+        // Processeur d'entrée pour le menu
+        menuInputProcessor = new InputAdapter() {
             @Override
             public boolean keyDown(int keycode) {
-                if (mario.isVivant()) {
-                    if (keycode == Input.Keys.RIGHT) {
-                        if (xPos == -1) {
-                            xPos = 0;
-                            xFond1 = -50;
-                            xFond2 = 750;
-                        }
-                        mario.setMarche(true);
-                        mario.setVersDroite(true);
-                        dx = VITESSE_FOND;
+                if (isInMenu) {
+                    switch (keycode) {
+                        case Input.Keys.UP:
+                            playSound(coinSound);
+                            navigateMenu(-1);
+                            return true;
+                        case Input.Keys.DOWN:
+                            playSound(coinSound);
+                            navigateMenu(1);
+                            return true;
+                        case Input.Keys.ENTER:
+                            playSound(powerUpSound);
+                            selectMenuOption();
+                            return true;
+                        case Input.Keys.M:
+                            toggleMusic();
+                            return true;
                     }
-                    if (keycode == Input.Keys.LEFT) {
-                        if (xPos == 4431) {
-                            xPos = 4430;
-                            xFond1 = -50;
-                            xFond2 = 750;
-                        }
-                        mario.setMarche(true);
-                        mario.setVersDroite(false);
-                        dx = -VITESSE_FOND;
-                    }
-                    if (keycode == Input.Keys.SPACE) {
-                        mario.jump(HAUTEUR_SOL);
-                    }
-                    if (keycode == Input.Keys.UP) {
-                        mario.climb(true, HAUTEUR_SOL, HAUTEUR_PLAFOND);
-                    }
-                }
-                return true;
-            }
-
-            @Override
-            public boolean keyUp(int keycode) {
-                if (keycode == Input.Keys.RIGHT || keycode == Input.Keys.LEFT) {
-                    mario.setMarche(false);
-                    dx = 0;
                 }
                 return false;
             }
         };
-
-        Gdx.input.setInputProcessor(inputAdapter); // Configurer le processeur d'entrées une seule fois
+    
+        // Processeur d'entrée pour le jeu
+        gameInputProcessor = new InputAdapter() {
+            @Override
+            public boolean keyDown(int keycode) {
+                if (!isInMenu && mario.isVivant()) {
+                    switch (keycode) {
+                        case Input.Keys.RIGHT:
+                            if (xPos == -1) {
+                                xPos = 0;
+                                xFond1 = -50;
+                                xFond2 = 750;
+                            }
+                            mario.setMarche(true);
+                            mario.setVersDroite(true);
+                            dx = VITESSE_FOND;
+                            return true;
+    
+                        case Input.Keys.LEFT:
+                            if (xPos == 4431) {
+                                xPos = 4430;
+                                xFond1 = -50;
+                                xFond2 = 750;
+                            }
+                            mario.setMarche(true);
+                            mario.setVersDroite(false);
+                            dx = -VITESSE_FOND;
+                            return true;
+    
+                        case Input.Keys.SPACE:
+                            playSound(jumpSound);
+                            mario.jump(HAUTEUR_SOL);
+                            return true;
+    
+                        case Input.Keys.UP:
+                            mario.climb(true, HAUTEUR_SOL, HAUTEUR_PLAFOND);
+                            return true;
+                            
+                        case Input.Keys.M:
+                            toggleMusic();
+                            return true;
+                    }
+                }
+                return false;
+            }
+    
+            @Override
+            public boolean keyUp(int keycode) {
+                if (!isInMenu && mario.isVivant()) {
+                    if (keycode == Input.Keys.RIGHT || keycode == Input.Keys.LEFT) {
+                        mario.setMarche(false);
+                        dx = 0;
+                        return true;
+                    }
+                }
+                return false;
+            }
+        };
+    
+        // Initialiser avec le processeur du menu par défaut
+        Gdx.input.setInputProcessor(menuInputProcessor);
     }
 
-    @Override
-    public void show() {
-        // Cette méthode est appelée lorsque ce Screen devient le Screen actuel de l'application
+    public boolean isInMenu() {
+        return isInMenu;
+    }
+    
+    private void createMenu() {
+        menuTable = new Table();
+        menuTable.setFillParent(true);
+        menuLabels = new Label[menuOptions.length];
+
+        for (int i = 0; i < menuOptions.length; i++) {
+            Label.LabelStyle labelStyle = new Label.LabelStyle();
+            labelStyle.font = font;
+            menuLabels[i] = new Label(menuOptions[i], labelStyle);
+            menuTable.add(menuLabels[i]).pad(10).row();
+        }
+
+        stage.addActor(menuTable);
+        updateMenuHighlight();
+    }
+
+    private void updateMenuHighlight() {
+        for (int i = 0; i < menuLabels.length; i++) {
+            menuLabels[i].setColor(i == currentMenuOption ? 1 : 1, 1, i == currentMenuOption ? 0 : 1, 1);
+        }
+    }
+
+    public void navigateMenu(int direction) {
+        currentMenuOption = (currentMenuOption + direction + menuOptions.length) % menuOptions.length;
+        updateMenuHighlight();
+    }
+
+    public void selectMenuOption() {
+        switch (currentMenuOption) {
+            case 0:
+                startGame();
+                break;
+            case 1:
+                showOptions();
+                break;
+            case 2:
+                Gdx.app.exit();
+                break;
+        }
+    }
+
+    private void startGame() {
+        isInMenu = false;
+        Gdx.input.setInputProcessor(gameInputProcessor);
+        if (isMusicEnabled) {
+            backgroundMusic.play();
+        }
+        mario.setMarche(false);
+        dx = 0;
+        // Réinitialiser d'autres états du jeu si nécessaire
+    }
+    
+    private void showOptions() {
+        System.out.println("Options menu clicked");
+        // Implémentez votre logique d'options ici
     }
 
     @Override
     public void render(float delta) {
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        if (isInMenu) {
+            renderMenu();
+        } else {
+            renderGame(delta);
+        }
+    }
+
+    private void renderMenu() {
+        batch.begin();
+        batch.draw(menuBackground, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        batch.end();
+
+        stage.act();
+        stage.draw();
+    }
+
+    public void renderGame(float delta) {
         // Mettre à jour l'état et l'animation de Mario
         List<Objet> objets = new ArrayList<>();
         objets.addAll(tuyauxRouges);
@@ -368,6 +572,28 @@ public class Scene implements Screen {
         }
     }
 
+    private void toggleMusic() {
+        isMusicEnabled = !isMusicEnabled;
+        if (isMusicEnabled) {
+            backgroundMusic.play();
+        } else {
+            backgroundMusic.pause();
+        }
+    }
+
+    private void playSound(Sound sound) {
+        if (sound != null) {
+            sound.play(soundVolume);
+        }
+    }
+
+
+    @Override
+    public void show() {
+        // Initialize your scene elements here
+        // This method is called when the screen becomes the current screen
+    }
+
     @Override
     public void resize(int width, int height) {}
 
@@ -401,6 +627,11 @@ public class Scene implements Screen {
         for (Tortue tortue : tortues) {
             tortue.dispose();
         }
-        // mario.getTexture().dispose(); // Libérer la texture de Mario
+        backgroundMusic.dispose();
+        jumpSound.dispose();
+        coinSound.dispose();
+        dieSound.dispose();
+        powerUpSound.dispose();
+        powerDownSound.dispose();
     }
-}
+}    
