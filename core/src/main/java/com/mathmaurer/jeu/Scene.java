@@ -109,7 +109,7 @@ public class Scene implements Screen {
         batch = new SpriteBatch();
 
         // Initialisation des objets
-        mario = new Mario(220, 55, 43, 65); // Initialisation avec la position de départ
+        mario = new Mario(220, 55, 28, 60); // Initialisation avec la position de départ
 
         // Initialisation des tuyaux et des blocs
         tuyauxRouges = new ArrayList<>();
@@ -462,12 +462,12 @@ public class Scene implements Screen {
     
         // Dessiner les champs
         for (Champ champ : champs) {
-            champ.dessine(batch);
+            champ.render(batch);
         }
     
         // Dessiner les tortues
         for (Tortue tortue : tortues) {
-            tortue.dessine(batch);
+            tortue.render(batch);
         }
     
         // Dessiner les pièces
