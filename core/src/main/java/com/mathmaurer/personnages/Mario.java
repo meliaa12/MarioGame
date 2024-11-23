@@ -7,24 +7,35 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.mathmaurer.objets.Objet;
 
 public class Mario extends Personnage {
-    private boolean isJumping = false;
-    private int vy = 0;
-    private static final int GRAVITY = -1; // Gravité qui affecte la vitesse verticale
-    private static final int JUMP_STRENGTH = 15; // Force du saut
-
-    private Texture textureMarioSautDroite, textureMarioSautGauche;
+    private Texture textureMarioArretDroite;
+    private Texture textureMarioArretGauche;
+    private Texture textureMarioMarcheDroite;
+    private Texture textureMarioMarcheGauche;
+    private Texture textureMarioSautDroite;
+    private Texture textureMarioSautGauche;
+    private Texture textureMarioMeurt;
+    private int compteurMort;
+    private boolean isJumping;
+    private float vy;
+    private static final float GRAVITY = -0.5f;
+    private static final float JUMP_STRENGTH = 10f;
 
     public Mario(float x, float y, float largeur, float hauteur) {
         super(x, y, largeur, hauteur);
-        // Charger les textures spécifiques à Mario
-        textureMarioSautDroite = new Texture("images/marioSautDroite.png");
-        textureMarioSautGauche = new Texture("images/marioSautGauche.png");
+        this.textureMarioArretDroite = new Texture("images/marioArretDroite.png");
+        this.textureMarioArretGauche = new Texture("images/marioArretGauche.png");
+        this.textureMarioMarcheDroite = new Texture("images/marioMarcheDroite.png");
+        this.textureMarioMarcheGauche = new Texture("images/marioMarcheGauche.png");
+        this.textureMarioSautDroite = new Texture("images/marioSautDroite.png");
+        this.textureMarioSautGauche = new Texture("images/marioSautGauche.png");
+        this.textureMarioMeurt = new Texture("images/marioMeurt.png");
+        this.compteurMort = 0;
+        this.isJumping = false;
+        this.vy = 0;
     }
 
-    @Override
     public void dessine(SpriteBatch batch) {
         Texture texture;
-
         if (isJumping) {
             if (versDroite) {
                 texture = textureMarioSautDroite;
@@ -32,19 +43,10 @@ public class Mario extends Personnage {
                 texture = textureMarioSautGauche;
             }
         } else if (marche) {
-            compteur++;
             if (versDroite) {
-                if (compteur / 5 % 2 == 0) {
-                    texture = textureMarioMarcheDroite;
-                } else {
-                    texture = textureMarioArretDroite;
-                }
+                texture = textureMarioMarcheDroite;
             } else {
-                if (compteur / 5 % 2 == 0) {
-                    texture = textureMarioMarcheGauche;
-                } else {
-                    texture = textureMarioArretGauche;
-                }
+                texture = textureMarioMarcheGauche;
             }
         } else {
             if (versDroite) {
@@ -107,8 +109,25 @@ public class Mario extends Personnage {
 
         if (getY() < hauteurSol) {
             setY(hauteurSol);
-        } else if (getY() > hauteurPlafond) {
+        }
+        if (getY() > hauteurPlafond) {
             setY(hauteurPlafond);
         }
+    }
+
+    public void meurt() {
+        String str = "images/boom.png";
+        this.compteurMort++;
+        if (this.compteurMort > 100) {
+            str = "images/marioMeurt.png";
+            this.setY(this.getY() - 0);
+        }
+        this.textureMarioMeurt = new Texture(str);
+    }
+
+    // Nouvelle méthode pour définir la vitesse verticale
+    public void setVelocityY(float velocity) {
+        // Utilisé pour le petit saut après avoir écrasé un ennemi
+        this.vy = velocity;
     }
 }

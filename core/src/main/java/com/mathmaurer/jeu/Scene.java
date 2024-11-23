@@ -1,8 +1,8 @@
 package com.mathmaurer.jeu;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -47,7 +47,7 @@ public class Scene implements Screen {
     private List<Champ> champs;
     private List<Tortue> tortues;
 
-     private boolean isInMenu;
+    private boolean isInMenu;
     private Stage stage;
     private Table menuTable;
     private BitmapFont font;
@@ -578,65 +578,103 @@ public class Scene implements Screen {
     }
 
     private void gererCollisions() {
-        // Gérer les collisions entre Mario et les tuyaux rouges
-        for (TuyauRouge tuyau : tuyauxRouges) {
-            if (mario.contactAvant(tuyau) || mario.contactArriere(tuyau) || mario.contactDessous(tuyau) || mario.contactDessus(tuyau)) {
-                // Gérer la collision (par exemple, arrêter le mouvement de Mario)
-                mario.setMarche(false);
-                dx = 0;
+        // Détection des collisions avec les objets (tuyaux et blocs)
+        List<Objet> objets = new ArrayList<>();
+        objets.addAll(tuyauxRouges);
+        objets.addAll(blocs);
+        
+        // Vérification des collisions de Mario avec les objets
+        for (Objet objet : objets) {
+            if (mario.proche(objet)) {
+                if (mario.contactAvant(objet) || mario.contactArriere(objet) || 
+                    mario.contactDessous(objet) || mario.contactDessus(objet)) {
+                    mario.setMarche(false);
+                    dx = 0;
+                }
             }
-
-           Iterator<Piece> iterPieces = pieces.iterator();
+        }
+    
+        // Détection des collisions avec les pièces
+        Iterator<Piece> iterPieces = pieces.iterator();
         while (iterPieces.hasNext()) {
             Piece piece = iterPieces.next();
-            if (mario.contactAvant(piece) || mario.contactArriere(piece) || 
-                mario.contactDessus(piece) || mario.contactDessous(piece)) {
-                // Jouer le son de collection de pièce
-                playSound(coinSound);
-                // Augmenter le score
-                score += 10;
-                // Retirer la pièce
-                iterPieces.remove();
-            }
-        }
-    }
-
-        // Gérer les collisions entre Mario et les blocs
-        for (Block bloc : blocs) {
-            if (mario.contactAvant(bloc) || mario.contactArriere(bloc) || mario.contactDessous(bloc) || mario.contactDessus(bloc)) {
-                // Gérer la collision (par exemple, arrêter le mouvement de Mario)
-                mario.setMarche(false);
-                dx = 0;
-            }
-        }
-
-         // Gérer les collisions entre Mario et les champs
-         for (Champ champ : champs) {
-            if (mario.contactAvant(champ) || mario.contactArriere(champ) || mario.contactDessous(champ)) {
-                if (mario.contactDessous(champ)) {
-                    champ.meurt(); // Mario écrase le champ
-                } else {
-                    // Gérer la collision (par exemple, arrêter le mouvement de Mario)
-                    mario.setMarche(false);
-                    dx = 0;
+            if (mario.proche(piece)) {
+                if (mario.contactAvant(piece) || mario.contactArriere(piece) || 
+                    mario.contactDessus(piece) || mario.contactDessous(piece)) {
+                    playSound(coinSound);
+                    score += 10;
+                    iterPieces.remove();
                 }
             }
         }
-
-        // Gérer les collisions entre Mario et les tortues
+    
+        // Détection des collisions des champignons entre eux
+        for (int i = 0; i < champs.size(); i++) {
+            for (int j = 0; j < champs.size(); j++) {
+                if (j != i && champs.get(i).isVivant() && champs.get(j).isVivant()) {
+                    if (champs.get(j).proche(champs.get(i))) {
+                        champs.get(j).setVersDroite(!champs.get(j).isVersDroite());
+                    }
+                }
+            }
+        }
+    
+        // Détection des collisions des tortues entre elles
+        for (int i = 0; i < tortues.size(); i++) {
+            for (int j = 0; j < tortues.size(); j++) {
+                if (j != i && tortues.get(i).isVivant() && tortues.get(j).isVivant()) {
+                    if (tortues.get(j).proche(tortues.get(i))) {
+                        tortues.get(j).setVersDroite(!tortues.get(j).isVersDroite());
+                    }
+                }
+            }
+        }
+    
+        // Détection des collisions entre champignons et tortues
+        for (Champ champ : champs) {
+            for (Tortue tortue : tortues) {
+                if (champ.isVivant() && tortue.isVivant()) {
+                    if (champ.proche(tortue)) {
+                        champ.setVersDroite(!champ.isVersDroite());
+                        tortue.setVersDroite(!tortue.isVersDroite());
+                    }
+                }
+            }
+        }
+    
+        // Détection des collisions de Mario avec les ennemis
+        // Champignons
+        for (Champ champ : champs) {
+            if (mario.proche(champ) && champ.isVivant()) {
+                if (mario.contactDessus(champ)) {
+                    playSound(powerDownSound);
+                    champ.meurt();
+                    // mario.setVelocityY(-10); // petit saut après avoir écrasé un ennemi
+                } else if (mario.contactAvant(champ) || mario.contactArriere(champ) || mario.contactDessous(champ)) {
+                    if (mario.isVivant()) {
+                        playSound(dieSound);
+                        mario.meurt();
+                    }
+                }
+            }
+        }
+    
+        // Tortues
         for (Tortue tortue : tortues) {
-            if (mario.contactAvant(tortue) || mario.contactArriere(tortue) || mario.contactDessous(tortue) ) {
-                if (mario.contactDessous(tortue)) {
-                    tortue.mourir(); // Mario écrase la tortue
-                } else {
-                    // Gérer la collision (par exemple, arrêter le mouvement de Mario)
-                    mario.setMarche(false);
-                    dx = 0;
+            if (mario.proche(tortue) && tortue.isVivant()) {
+                if (mario.contactDessus(tortue)) {
+                    playSound(powerDownSound);
+                    tortue.mourir();
+                    // mario.setVelocityY(-10); // petit saut après avoir écrasé un ennemi
+                } else if (mario.contactAvant(tortue) || mario.contactArriere(tortue) || mario.contactDessous(tortue)) {
+                    if (mario.isVivant()) {
+                        playSound(dieSound);
+                        mario.meurt();
+                    }
                 }
             }
         }
     }
-
     private void toggleMusic() {
         isMusicEnabled = !isMusicEnabled;
         if (isMusicEnabled) {
@@ -655,8 +693,7 @@ public class Scene implements Screen {
 
     @Override
     public void show() {
-        // Initialize your scene elements here
-        // This method is called when the screen becomes the current screen
+    
     }
 
     @Override

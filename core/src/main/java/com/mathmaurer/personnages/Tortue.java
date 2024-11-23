@@ -7,7 +7,7 @@ import com.mathmaurer.objets.Objet;
 
 
 
-public class Tortue extends Personnage implements Runnable{
+public class Tortue extends Personnage implements Runnable {
 
     private Texture imgTortueDroite;
     private Texture imgTortueGauche;
@@ -28,6 +28,9 @@ public class Tortue extends Personnage implements Runnable{
         this.imgTortueDroite = new Texture("images/tortueArretDroite.png");
         this.imgTortueGauche = new Texture("images/tortueArretGauche.png");
         this.imgTortueMort = new Texture("images/tortueFermee.png");
+        // Démarrer le thread pour le mouvement
+        Thread chronoTortue = new Thread(this);
+        chronoTortue.start();
     }
 
     // Rendu
@@ -76,18 +79,24 @@ public class Tortue extends Personnage implements Runnable{
     }
 
     @Override
-	public void run() {
-		try{Thread.sleep(20);} // on attend 20 ms avant d'appeler bouge pour que tous les objets soient compl�tement cr��s
-		catch (InterruptedException e){}		
-		
-		while(true){ // boucle infinie
-			if(this.vivant == true){
-		    this.bouge();
-		    try{Thread.sleep(PAUSE);}
-			catch (InterruptedException e){}
-			}
-		}
-	}
+    public void run() {
+        try {
+            Thread.sleep(20); // Attendre 20 ms avant d'appeler bouge pour que tous les objets soient complètement créés
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        while (true) { // boucle infinie
+            if (this.vivant) {
+                this.bouge();
+                try {
+                    Thread.sleep(PAUSE);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 	
 
     // Simulation de mort
