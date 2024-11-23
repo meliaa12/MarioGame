@@ -16,6 +16,9 @@ public class Piece extends Objet implements Runnable {
         this.texture2 = new Texture("images/piece2.png"); // Deuxième texture pour l'animation
     }
 
+
+
+
     // **** METHODES **** //
     @Override
     public void render(SpriteBatch batch) {

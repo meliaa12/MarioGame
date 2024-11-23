@@ -139,6 +139,10 @@ public class Personnage {
                 this.y + this.hauteur < personnage.getY() || this.y + this.hauteur > personnage.getY());
     }
 
+    public boolean contactDessus(Personnage personnage) {
+        return !(this.x + this.largeur < personnage.getX() || this.x > personnage.getX() + personnage.getLargeur() ||
+                this.y < personnage.getY() + personnage.getHauteur() || this.y > personnage.getY() + personnage.getHauteur() + 5);
+    }
     public boolean proche(Personnage personnage) {
         return (this.x > personnage.getX() - 10 && this.x < personnage.getX() + personnage.getLargeur() + 10) ||
                 (this.x + this.largeur > personnage.getX() - 10 && this.x + this.largeur < personnage.getX() + personnage.getLargeur() + 10);
