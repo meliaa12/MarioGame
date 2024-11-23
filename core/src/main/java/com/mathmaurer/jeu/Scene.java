@@ -2,6 +2,7 @@ package com.mathmaurer.jeu;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Iterator;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -9,6 +10,7 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -19,6 +21,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.mathmaurer.objets.Block;
 import com.mathmaurer.objets.Objet;
+import com.mathmaurer.objets.Piece;
 import com.mathmaurer.objets.TuyauRouge;
 import com.mathmaurer.personnages.Champ;
 import com.mathmaurer.personnages.Mario;
@@ -69,6 +72,9 @@ public class Scene implements Screen {
     private final int HAUTEUR_SOL = 55; // Sol à y = 0
     private final int HAUTEUR_PLAFOND = 300; // Par exemple, plafond à y = 300
     
+
+    private List<Piece> pieces; // Nouvelle liste pour les pièces
+    private int score; 
 
     public Scene() {
         // Initialisation des positions
@@ -160,8 +166,35 @@ public class Scene implements Screen {
         positionLimiteDepart = 220 + imgDepart.getWidth();
         xPos = positionLimiteDepart;
 
-        // Cette méthode est appelée lorsque ce Screen devient le Screen actuel de l'application
+
+        pieces = new ArrayList<>();
+        score = 0;
+
+        // Ajouter des pièces à des positions spécifiques
+        pieces.add(new Piece(450, 180));
+        pieces.add(new Piece(480, 180));
+        pieces.add(new Piece(510, 180));
+        pieces.add(new Piece(1250, 200));
+        pieces.add(new Piece(1280, 200));
+        pieces.add(new Piece(1310, 200));
+        pieces.add(new Piece(2050, 190));
+        pieces.add(new Piece(2080, 190));
+        pieces.add(new Piece(2650, 220));
+        pieces.add(new Piece(2680, 220));
+        pieces.add(new Piece(3550, 180));
+        pieces.add(new Piece(3580, 180));
+        pieces.add(new Piece(4050, 200));
+        pieces.add(new Piece(4080, 200));
+        pieces.add(new Piece(4250, 230));
+        pieces.add(new Piece(4280, 230));
+
+        // Démarrer l'animation des pièces
+        for (Piece piece : pieces) {
+            new Thread(piece).start();
+        }
     }
+
+    
 
     private void initializeAudio() {
         try {
@@ -337,6 +370,8 @@ public class Scene implements Screen {
         }
     }
 
+    
+
     private void startGame() {
         isInMenu = false;
         Gdx.input.setInputProcessor(gameInputProcessor);
@@ -379,62 +414,74 @@ public class Scene implements Screen {
         List<Objet> objets = new ArrayList<>();
         objets.addAll(tuyauxRouges);
         objets.addAll(blocs);
-        mario.update(HAUTEUR_SOL, objets); // Mettre à jour l'état de Mario (saut, animation, etc.)
-
+        mario.update(HAUTEUR_SOL, objets);
+    
         // Déplacer Mario et le fond
         deplacementMario();
         deplacementFond();
         deplacementObjets();
-
+    
         gererCollisions();
-
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); // Effacer l'écran
-        // Commencer le dessin avec le batch
+    
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        
+        // Commencer le batch une seule fois
         batch.begin();
-
+    
         // Dessiner les éléments de l'arrière-plan
         batch.draw(imgFond1, xFond1, 0);
         batch.draw(imgFond2, xFond2, 0);
-
+    
         // Dessiner le château et le panneau
         if (!departAtteint) {
             batch.draw(imgChateau1, 10 + xFond1, 60);
             batch.draw(imgDepart, 200 + xFond1, 60);
-
+    
             // Vérifier si Mario a dépassé la position limite de départ
             if (mario.getX() >= positionLimiteDepart + imgDepart.getWidth()) {
                 departAtteint = true;
             }
         }
-
+    
         // Dessiner le château de fin et le drapeau
         batch.draw(imgChateauFin, 5000, 55);
         batch.draw(imgDrapeau, 4950, 55);
-
-        // Dessiner Mario à sa position actuelle
+    
+        // Dessiner Mario
         mario.dessine(batch);
-
+    
         // Dessiner les tuyaux rouges
         for (TuyauRouge tuyau : tuyauxRouges) {
             batch.draw(tuyau.getTextureObjet(), tuyau.getX(), tuyau.getY());
         }
-
+    
         // Dessiner les blocs
         for (Block bloc : blocs) {
             batch.draw(bloc.getTextureObjet(), bloc.getX(), bloc.getY());
         }
-
+    
         // Dessiner les champs
         for (Champ champ : champs) {
             champ.dessine(batch);
         }
-
+    
         // Dessiner les tortues
         for (Tortue tortue : tortues) {
             tortue.dessine(batch);
         }
-
-        // Fin du dessin
+    
+        // Dessiner les pièces
+        for (Piece piece : pieces) {
+            piece.render(batch);
+        }
+    
+        // Afficher le score
+        BitmapFont scoreFont = new BitmapFont();
+        scoreFont.setColor(Color.WHITE);
+        scoreFont.draw(batch, "Score: " + score, 20, Gdx.graphics.getHeight() - 20);
+        scoreFont.dispose(); // Clean up the font after use
+    
+        // Terminer le batch une seule fois à la fin
         batch.end();
     }
 
@@ -524,6 +571,10 @@ public class Scene implements Screen {
         for (Tortue tortue : tortues) {
             tortue.setX(tortue.getX() - dx * 2); // Déplacement plus rapide des objets
         }
+
+        for (Piece piece : pieces) {
+            piece.setX(piece.getX() - dx * 2);
+        }
     }
 
     private void gererCollisions() {
@@ -534,7 +585,21 @@ public class Scene implements Screen {
                 mario.setMarche(false);
                 dx = 0;
             }
+
+           Iterator<Piece> iterPieces = pieces.iterator();
+        while (iterPieces.hasNext()) {
+            Piece piece = iterPieces.next();
+            if (mario.contactAvant(piece) || mario.contactArriere(piece) || 
+                mario.contactDessus(piece) || mario.contactDessous(piece)) {
+                // Jouer le son de collection de pièce
+                playSound(coinSound);
+                // Augmenter le score
+                score += 10;
+                // Retirer la pièce
+                iterPieces.remove();
+            }
         }
+    }
 
         // Gérer les collisions entre Mario et les blocs
         for (Block bloc : blocs) {
@@ -633,5 +698,9 @@ public class Scene implements Screen {
         dieSound.dispose();
         powerUpSound.dispose();
         powerDownSound.dispose();
+
+        for (Piece piece : pieces) {
+            piece.dispose();
+        }
     }
 }    
