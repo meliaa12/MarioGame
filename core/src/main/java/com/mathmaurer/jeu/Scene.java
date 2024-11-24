@@ -10,6 +10,7 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
@@ -83,7 +84,7 @@ public class Scene implements Screen {
         // Ajoutez ces variables en haut de votre classe Scene
     private boolean afficherMessageFin = false;
     private float timerFinPartie = 0;
-    private final float DELAI_MENU_FIN = 9f; // 3 secondes de délai
+    private final float DELAI_MENU_FIN = 7f; // 3 secondes de délai
     private boolean musicFinJouee = false;
     
   
@@ -120,7 +121,7 @@ public class Scene implements Screen {
 
 // Déclarations globales
 private float timer = 0; // Temps écoulé depuis le début du jeu
-private static final float DELAY = 5.0f; // Temps en secondes avant disparition
+private static final float DELAY = 3.0f; // Temps en secondes avant disparition
 private boolean afficherElementsDebut = true;
 
 private boolean showWelcomeMessage = true;  // Flag pour afficher le message de bienvenue une seule fois
@@ -194,9 +195,9 @@ public Scene(float screenWidth) {
         blocs.add(new Block(2000, 120)); // Bloc plus bas pour éviter la monotonie
         blocs.add(new Block(2600, 130)); // Légèrement plus haut mais accessible
         blocs.add(new Block(2650, 150));
-        blocs.add(new Block(3000, 120)); // Ajouter de la variété dans les hauteurs
+        blocs.add(new Block(3050, 120)); // Ajouter de la variété dans les hauteurs
         blocs.add(new Block(3500, 150));
-        blocs.add(new Block(3700, 130)); // Bloc isolé pour un challenge
+        blocs.add(new Block(4200, 150)); // Bloc isolé pour un challenge
 
         // Ajouter des champs (espacement raisonnable pour laisser le joueur respirer)
         champs.add(new Champ(900, 55));
@@ -213,7 +214,7 @@ public Scene(float screenWidth) {
         tortues.add(new Tortue(2200, 55)); // Plus proche pour augmenter la difficulté
         tortues.add(new Tortue(2900, 55));
         tortues.add(new Tortue(3300, 55));
-        tortues.add(new Tortue(3900, 55));
+        tortues.add(new Tortue(3500, 55));
 
 
         // Position limite de départ pour Mario
@@ -222,17 +223,15 @@ public Scene(float screenWidth) {
         
 
 
-        
-        // Ajouter des pièces à des positions spécifiques
-        pieces.add(new Piece(450, 180,"images/java.png"));
-        pieces.add(new Piece(480, 180,"images/phython.jpeg"));
-        pieces.add(new Piece(510, 180, "images/csharp.png"));
-        pieces.add(new Piece(1250, 200, "images/ruby.jpeg"));
-        pieces.add(new Piece(1280, 200, "images/html.png"));
+        pieces.add(new Piece(450, 180, "images/java.png"));
+        pieces.add(new Piece(500, 180, "images/phython.jpeg"));
+        pieces.add(new Piece(540, 180, "images/csharp.png"));
+        pieces.add(new Piece(1000, 200, "images/ruby.jpeg"));
+        pieces.add(new Piece(1070, 200, "images/html.png"));
         pieces.add(new Piece(1310, 200, "images/css.png"));
         pieces.add(new Piece(2050, 190, "images/javascript.png"));
-        pieces.add(new Piece(2080, 190, "images/php.jpeg"));
-        pieces.add(new Piece(2680, 220, "images/laravel.png"));
+        pieces.add(new Piece(2680, 190, "images/php.jpeg"));
+        pieces.add(new Piece(3000, 220, "images/laravel.png"));
         pieces.add(new Piece(3550, 180, "images/react.png"));
         pieces.add(new Piece(3580, 180, "images/sql.png"));
       
@@ -567,7 +566,7 @@ public Scene(float screenWidth) {
     private boolean partieGagnee() {
         return this.compteARebours.getCompteurTemps() > 0 && 
                this.mario.isVivant() &&  
-               this.scoreManager.getScore() >= 50 && 
+               this.scoreManager.getScore() >= 80 && 
                this.xPos > 4500;
     }
     
@@ -583,8 +582,8 @@ public Scene(float screenWidth) {
 
     @Override
     public void render(float delta) {
-        // Gdx.gl.glClearColor(0, 0, 0, 1);
-        // Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         if (isInMenu) {
             renderMenu();  // Afficher le menu si on est dans le menu
@@ -662,11 +661,11 @@ public Scene(float screenWidth) {
 //         batch.draw(imgDepart, 220 - dx, 55);
 //     }
     
-//    // Dessiner le château de fin et le drapeau
-//     if (xPos >= 4000) {  // Ajuster cette valeur selon vos besoins
-//         batch.draw(imgChateauFin, chateauFinX, 55);
-//         batch.draw(imgDrapeau, drapeauX, 55);
-//     }
+   // Dessiner le château de fin et le drapeau
+    if (xPos >= 4000) {  // Ajuster cette valeur selon vos besoins
+        batch.draw(imgChateauFin, chateauFinX, 55);
+        batch.draw(imgDrapeau, drapeauX, 55);
+    }
 
     
         // Vérifier si les éléments de début doivent être affichés
@@ -733,24 +732,36 @@ if (finDePartie()) {
 
     BitmapFont policeFin = new BitmapFont();
     policeFin.getData().setScale(2.0f);
-    // policeFin.setColor(Color.RED);
+
+    String raisonDefaite = "";
 
     if (partieGagnee()) {
+        policeFin.setColor(Color.GREEN); // Vert pour la victoire
         // Jouer la musique de victoire une seule fois
         if (!musicFinJouee) {
             backgroundMusic.stop();
             playSound(powerUpSound);
             musicFinJouee = true;
         }
-        policeFin.draw(batch, "Vous avez toutes les compétences !!", 120, 180);
+        policeFin.draw(batch, "Félicitations vous avez toutes les compétences !!", 80, 180);
     } else {
-        // Jouer la musique de défaite une seule fois
-        if (!musicFinJouee) {
-            backgroundMusic.stop();
-            playSound(dieSound);
-            musicFinJouee = true;
+        // Vérifier si le joueur arrive au drapeau sans remplir les conditions de victoire
+        if (xPos >= 4400 && scoreManager.getScore() < 80) {
+            raisonDefaite = "Tu n'as pas terminé, il te reste du temps";
+            policeFin.setColor(Color.ORANGE); // Une couleur spécifique pour ce message
+            policeFin.draw(batch, raisonDefaite, 100, 180);
+        } else {
+            // Si aucune autre condition n'est remplie, afficher la défaite
+            policeFin.setColor(Color.RED); // Rouge pour la défaite
+            // Jouer la musique de défaite une seule fois
+            if (!musicFinJouee) {
+                backgroundMusic.stop();
+                playSound(dieSound);
+                musicFinJouee = true;
+            }
+            raisonDefaite = "A refaire, vous ne passez pas le test...";
+            policeFin.draw(batch, raisonDefaite, 80, 180);
         }
-        policeFin.draw(batch, "Vous ne passez pas le test...", 120, 180);
     }
 
     // Dessiner le château de fin et le drapeau
@@ -765,7 +776,6 @@ if (finDePartie()) {
         isInMenu = true;
         Gdx.input.setInputProcessor(menuInputProcessor);
         // Réinitialiser les variables pour la prochaine partie
-     
     }
 }
         // Terminer le batch une seule fois à la fin
