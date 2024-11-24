@@ -10,6 +10,7 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -75,6 +76,9 @@ public class Scene implements Screen {
 
     private final int HAUTEUR_SOL = 55; // Sol à y = 0
     private final int HAUTEUR_PLAFOND = 300; // Par exemple, plafond à y = 300
+
+    private float chateauFinX = 4470; // Position initiale du château de fin
+    private float drapeauX = 4400;    // Position initiale du drapeau
     
 
     public Scene() {
@@ -388,6 +392,40 @@ public class Scene implements Screen {
         // Implémentez votre logique d'options ici
     }
 
+    private boolean partieGagnee() {        
+        // On gagne si :
+        // - Le temps n'est pas écoulé
+        // - Mario est vivant
+        // - Mario a atteint au moins 50% des pièces disponibles (80 points car chaque pièce vaut 10)
+        // - Mario a atteint la position finale (proche du drapeau)
+        int scoreMinimum = 50; // Score minimum pour gagner (8 pièces sur 16)
+        int positionFinale = 4400; // Position où se trouve le drapeau/château
+        
+        return this.compteARebours.getCompteurTemps() > 0 && 
+               this.mario.isVivant() && 
+            //    this.scoreManager.getScore() >= scoreMinimum && 
+               this.xPos >= positionFinale;
+    }
+
+    private boolean partiePerdue() {
+        return !this.mario.isVivant() || // Mario est mort
+               this.compteARebours.getCompteurTemps() <= 0 || // Temps écoulé
+               (this.xPos >= 4400 && this.scoreManager.getScore() < 50); // Arrivé à la fin mais sans assez de points
+    }
+
+    public boolean finDePartie() {
+        // Ajouter un log pour le débogage
+        if (this.partieGagnee() || this.partiePerdue()) {
+            System.out.println("État de fin de partie :");
+            System.out.println("Temps restant : " + this.compteARebours.getCompteurTemps());
+            System.out.println("Mario vivant : " + this.mario.isVivant());
+            System.out.println("Score actuel : " + this.scoreManager.getScore());
+            System.out.println("Position X : " + this.xPos);
+            System.out.println("Partie gagnée : " + this.partieGagnee());
+        }
+        return this.partieGagnee() || this.partiePerdue();
+    }
+
     @Override
     public void render(float delta) {
         // Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -434,21 +472,18 @@ public class Scene implements Screen {
         batch.draw(imgFond2, xFond2, 0);
         
 
-          // Dessiner le château et le panneau de départ
-    if (!departAtteint) {
-        batch.draw(imgChateau1, 10, 55);
-        batch.draw(imgDepart, 220, 55);
-    }
+        // Dessiner le château et le panneau de départ
+        if (!departAtteint) {
+            batch.draw(imgChateau1, 10, 55);
+            batch.draw(imgDepart, 220, 55);
+        }
 
-    // Vérifier si Mario a dépassé la position limite de départ
-    if (mario.getX() > positionLimiteDepart) {
+        // Vérifier si Mario a dépassé la position limite de départ
+     if (mario.getX() > positionLimiteDepart) {
         departAtteint = true;
-    }
+        }
     
 
-        // Dessiner le château de fin et le drapeau
-        batch.draw(imgChateauFin, 1000, 55);
-        batch.draw(imgDrapeau, 950, 55);
     
         // Dessiner Mario
         mario.dessine(batch);
@@ -484,6 +519,20 @@ public class Scene implements Screen {
         // Dessiner le compte à rebours
         compteARebours.render(batch);
     
+
+        if (finDePartie()) {
+            BitmapFont policeFin = new BitmapFont();
+            policeFin.getData().setScale(2.0f);
+            policeFin.setColor(Color.RED);
+            if (partieGagnee()) {
+                policeFin.draw(batch, "Vous avez gagné !!", 120, 180);
+                // Dessiner le château de fin et le drapeau avec positions ajustées
+                batch.draw(imgChateauFin, chateauFinX - dx * 2, 55);
+                batch.draw(imgDrapeau, drapeauX - dx * 2, 55);
+            } else {
+                policeFin.draw(batch, "Vous avez perdu...", 120, 180);
+            }
+        }
         // Terminer le batch une seule fois à la fin
         batch.end();
     }
@@ -578,6 +627,9 @@ public class Scene implements Screen {
         for (Piece piece : pieces) {
             piece.setX(piece.getX() - dx * 2);
         }
+
+        chateauFinX -= dx * 2;
+        drapeauX -= dx * 2;
     }
 
     private void gererCollisions() {
@@ -631,27 +683,6 @@ public class Scene implements Screen {
         }
     
     
-        // // Détection des collisions des champignons entre eux
-        // for (int i = 0; i < champs.size(); i++) {
-        //     for (int j = 0; j < champs.size(); j++) {
-        //         if (j != i && champs.get(i).isVivant() && champs.get(j).isVivant()) {
-        //             if (champs.get(j).proche(champs.get(i))) {
-        //                 champs.get(j).setVersDroite(!champs.get(j).isVersDroite());
-        //             }
-        //         }
-        //     }
-        // }
-    
-        // // Détection des collisions des tortues entre elles
-        // for (int i = 0; i < tortues.size(); i++) {
-        //     for (int j = 0; j < tortues.size(); j++) {
-        //         if (j != i && tortues.get(i).isVivant() && tortues.get(j).isVivant()) {
-        //             if (tortues.get(j).proche(tortues.get(i))) {
-        //                 tortues.get(j).setVersDroite(!tortues.get(j).isVersDroite());
-        //             }
-        //         }
-        //     }
-        // }
     
         // Gérer les collisions entre Mario et les champs
     for (Champ champ : champs) {

@@ -123,7 +123,7 @@ public class Mario extends Personnage {
         if (this.compteurMort > 5) {
             str = "images/marioMeurt.png";
             this.setY(this.getY() - 0);
-           
+            this.setVivant(false);
         }
         this.textureMarioMeurt = new Texture(str);
 
