@@ -15,9 +15,15 @@ images/champMarcheDroite.png
 images/champMarcheGauche.png
 images/chateau1.png
 images/chateauFin.png
+images/csharp.png
+images/css.png
 images/depart.png
 images/drapeau.png
 images/fondEcran.png
+images/html.png
+images/java.png
+images/javascript.png
+images/laravel.png
 images/marioArretDroite.png
 images/marioArretGauche.png
 images/marioMarcheDroite copy.png
@@ -26,8 +32,13 @@ images/marioMarcheGauche.png
 images/marioMeurt.png
 images/marioSautDroite.png
 images/marioSautGauche.png
+images/php.jpeg
+images/phython.jpeg
 images/piece1.png
 images/piece2.png
+images/react.png
+images/ruby.jpeg
+images/sql.png
 images/tortueArretDroite.png
 images/tortueArretGauche.png
 images/tortueFermee.png
