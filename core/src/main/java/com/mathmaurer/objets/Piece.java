@@ -15,13 +15,13 @@ public class Piece extends Objet implements Runnable {
     private Texture icoObjet; // Déclaration de l'attribut
 
 
-    public Piece(int x, int y) {
-        super(x, y, 25, 25, "images/piece1.png"); // Ajout du chemin de la texture
+    // Updated constructor to accept an image path
+    public Piece(int x, int y, String imagePath) {
+        super(x, y, 25, 25, imagePath); // Use the provided image path
         this.baseY = y;
         this.currentY = y;
-        this.icoObjet = new Texture("images/piece2.png");
+        this.icoObjet = new Texture(imagePath); // Use the provided image path for icoObjet
     }
-    
 
 
 

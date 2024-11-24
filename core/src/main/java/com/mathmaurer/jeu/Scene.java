@@ -14,6 +14,7 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -78,7 +79,50 @@ public class Scene implements Screen {
     private List<Piece> pieces; // Nouvelle liste pour les pièces
     private Score scoreManager; // Ajout du gestionnaire de score
 
+  
+    private static final int BACKGROUND_LAYERS = 1; // Change to 1 layer
+   private static final float[] PARALLAX_SPEEDS = {1.0f}; // Single speed
 
+
+    private Texture[] backgroundLayers;
+    private float[] backgroundPositions;
+    private float worldPosition;
+    private boolean isBackgroundLoaded;
+    private final float virtualWidth;  // Screen/viewport width
+
+
+    private Texture backgroundTexture;
+    private float[] positions;  // Stores x positions of background instances
+    private float accumulatedError;
+    
+    private static final float SCROLL_SPEED = 1.0f;  // Adjust as needed
+    private static final float BUFFER_ZONE = 100f;   // Off-screen buffer for smooth scrolling
+    
+
+
+    private static final int POSITION_CHATEAU_DEBUT = 10;  // Position X du château de début
+    private static final int POSITION_PANNEAU_DEPART = 200; // Position X du panneau de départ
+    private static final int POSITION_CHATEAU_FIN = 5000;  // Position X du château de fin
+    private static final int POSITION_DRAPEAU = 4950;      // Position X du drapeau
+    private static final int HAUTEUR_OBJETS = 60;  
+    
+
+    private static final float VITESSE_DEFILEMENT = 2.0f;  // Multiplicateur de vitesse
+    private static final float SEUIL_REPOSITION = -700.0f; // Seuil de repositionnement (largeurFond)
+    private float accumulateurDeplacement = 0.0f;  
+
+// Déclarations globales
+private float timer = 0; // Temps écoulé depuis le début du jeu
+private static final float DELAY = 5.0f; // Temps en secondes avant disparition
+private boolean afficherElementsDebut = true;
+
+private boolean showWelcomeMessage = true;  // Flag pour afficher le message de bienvenue une seule fois
+
+// Constructor to initialize virtualWidth
+public Scene(float screenWidth) {
+    this.virtualWidth = screenWidth;
+    initializeBackground();
+}
     public Scene() {
         // Initialisation des positions
         this.xFond1 = 0;
@@ -173,30 +217,128 @@ public class Scene implements Screen {
         pieces = new ArrayList<>();
         scoreManager = new Score();
 
-        // Ajouter des pièces à des positions spécifiques
-        pieces.add(new Piece(450, 180));
-        pieces.add(new Piece(480, 180));
-        pieces.add(new Piece(510, 180));
-        pieces.add(new Piece(1250, 200));
-        pieces.add(new Piece(1280, 200));
-        pieces.add(new Piece(1310, 200));
-        pieces.add(new Piece(2050, 190));
-        pieces.add(new Piece(2080, 190));
-        pieces.add(new Piece(2650, 220));
-        pieces.add(new Piece(2680, 220));
-        pieces.add(new Piece(3550, 180));
-        pieces.add(new Piece(3580, 180));
-        pieces.add(new Piece(4050, 200));
-        pieces.add(new Piece(4080, 200));
-        pieces.add(new Piece(4250, 230));
-        pieces.add(new Piece(4280, 230));
+        // Ajouter des pièces avec différentes images
+    pieces.add(new Piece(460, 180, "images/java.png"));
+    pieces.add(new Piece(480, 180, "images/phython.jpeg"));
+    pieces.add(new Piece(520, 180, "images/csharp.png"));
+   pieces.add(new Piece(1200, 200, "images/ruby.jpeg"));
+    pieces.add(new Piece(1270, 200, "images/html.png"));
+    pieces.add(new Piece(1340, 200, "images/css.png"));
+    pieces.add(new Piece(2050, 190, "images/javascript.png"));
+    pieces.add(new Piece(2080, 190, "images/php.jpeg"));
+    pieces.add(new Piece(2650, 220, "images/laravel.png"));
+    pieces.add(new Piece(2680, 220, "images/react.png"));
+    pieces.add(new Piece(3550, 180, "images/sql.png"));
+   
 
-        for (Piece piece : pieces) {
-            new Thread(piece).start();
-        }
+    for (Piece piece : pieces) {
+        new Thread(piece).start();
+    }
+
+    this.virtualWidth = 800f;  // Default width, adjust as needed
+}
+
+       
     
+    private void initializeBackground() {
+        try {
+            // Load single background texture
+            backgroundTexture = new Texture("images/fondEcran.png");
+            backgroundTexture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+            
+            // Initialize two background positions for seamless scrolling
+            positions = new float[2];
+            positions[0] = 0;
+            positions[1] = backgroundTexture.getWidth();
+            
+            isBackgroundLoaded = true;
+        } catch (Exception e) {
+            System.err.println("Error loading background texture: " + e.getMessage());
+            isBackgroundLoaded = false;
+        }
     }
     
+    // Update background positions
+    private void updateBackground(float delta, float dx) {
+        if (!isBackgroundLoaded || dx == 0) return;
+        
+        // Calculate movement
+        float movement = dx * SCROLL_SPEED * delta;
+        worldPosition += movement;
+        accumulatedError += movement;
+        
+        // Update positions
+        for (int i = 0; i < positions.length; i++) {
+            positions[i] -= movement;
+        }
+        
+        float width = backgroundTexture.getWidth();
+        
+        // Handle wrapping for both directions
+        if (dx > 0) {  // Moving right
+            for (int i = 0; i < positions.length; i++) {
+                if (positions[i] <= -width) {
+                    positions[i] = findFurthestPosition() + width;
+                }
+            }
+        } else {  // Moving left
+            for (int i = 0; i < positions.length; i++) {
+                if (positions[i] >= virtualWidth) {
+                    positions[i] = findNearestPosition() - width;
+                }
+            }
+        }
+        
+        // Error correction to prevent floating-point drift
+        if (Math.abs(accumulatedError) > 1.0f) {
+            for (int i = 0; i < positions.length; i++) {
+                positions[i] = Math.round(positions[i]);
+            }
+            accumulatedError = 0;
+        }
+    }
+    
+    // Helper method to find furthest background position
+    private float findFurthestPosition() {
+        float max = Float.NEGATIVE_INFINITY;
+        for (float pos : positions) {
+            if (pos > max) max = pos;
+        }
+        return max;
+    }
+    
+    // Helper method to find nearest background position
+    private float findNearestPosition() {
+        float min = Float.POSITIVE_INFINITY;
+        for (float pos : positions) {
+            if (pos < min) min = pos;
+        }
+        return min;
+    }
+    
+    // Render background
+    private void renderBackground(SpriteBatch batch) {
+        if (!isBackgroundLoaded) return;
+        
+        // Render background instances
+        for (float position : positions) {
+            // Only render if within visible area plus buffer
+            if (position > -backgroundTexture.getWidth() - BUFFER_ZONE && 
+                position < virtualWidth + BUFFER_ZONE) {
+                batch.draw(backgroundTexture, position, 0);
+            }
+        }
+    }
+    
+    // Reset background positions if needed
+    public void resetBackground() {
+        if (!isBackgroundLoaded) return;
+        positions[0] = 0;
+        positions[1] = backgroundTexture.getWidth();
+        worldPosition = 0;
+        accumulatedError = 0;
+    }
+
     private void initializeAudio() {
         try {
             // Vérifiez si le fichier audio de fond existe
@@ -326,6 +468,10 @@ public class Scene implements Screen {
         Gdx.input.setInputProcessor(menuInputProcessor);
     }
 
+    public void create() {
+        font = new BitmapFont();  // Initialisation de la police
+    }
+    
     public boolean isInMenu() {
         return isInMenu;
     }
@@ -372,7 +518,6 @@ public class Scene implements Screen {
     }
 
     
-
     private void startGame() {
         isInMenu = false;
         Gdx.input.setInputProcessor(gameInputProcessor);
@@ -381,8 +526,11 @@ public class Scene implements Screen {
         }
         mario.setMarche(false);
         dx = 0;
-        // Réinitialiser d'autres états du jeu si nécessaire
+    
+        // Afficher un message de bienvenue
+        showWelcomeMessage = true;
     }
+    
     
     private void showOptions() {
         System.out.println("Options menu clicked");
@@ -391,15 +539,31 @@ public class Scene implements Screen {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0, 0, 0, 1);
+        // Effacer l'écran
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
+    
+        // Dessiner le menu ou le jeu
         if (isInMenu) {
-            renderMenu();
+            renderMenu();  // Afficher le menu si on est dans le menu
         } else {
-            renderGame(delta);
+            renderGame(delta);  // Afficher le jeu si on n'est pas dans le menu
+        }
+    
+        // Afficher le message de bienvenue une seule fois
+        if (showWelcomeMessage) {
+            System.out.println("Message de bienvenue affiché");  // Ajout d'un message de débogage
+            showWelcomeMessage();  // Afficher le message de bienvenue
+            showWelcomeMessage = false;  // Désactiver l'affichage du message après l'avoir montré
         }
     }
+    
+    
+    private void showWelcomeMessage() {
+        batch.begin();
+        font.draw(batch, "Bienvenue dans le jeu, Mario !", 100, Gdx.graphics.getHeight() / 2);
+        batch.end();
+    }
+    
 
     private void renderMenu() {
         batch.begin();
@@ -410,81 +574,99 @@ public class Scene implements Screen {
         stage.draw();
     }
 
+
+
     public void renderGame(float delta) {
-        // Mettre à jour l'état et l'animation de Mario
+        // Mise à jour du défilement des fonds
+        updateBackground(delta, dx);
+        
+        // Mise à jour du timer
+        timer += delta; // Ajoute le temps écoulé depuis le dernier frame
+        
+        // Désactiver les éléments de début après le délai spécifié
+        if (timer > DELAY) {
+            afficherElementsDebut = false;
+        }
+        
+        // Liste des objets pour Mario
         List<Objet> objets = new ArrayList<>();
         objets.addAll(tuyauxRouges);
         objets.addAll(blocs);
         mario.update(HAUTEUR_SOL, objets);
-    
-        // Déplacer Mario et le fond
+        
+        // Déplacement de Mario et des objets
         deplacementMario();
         deplacementFond();
         deplacementObjets();
-    
+        
+        // Gérer les collisions
         gererCollisions();
-    
+        
+        // Effacer l'écran avant de dessiner
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         
-        // Commencer le batch une seule fois
+        // Démarrer le batch pour dessiner les éléments
         batch.begin();
-    
-        // Dessiner les éléments de l'arrière-plan
+        renderBackground(batch);
+        
+        // Dessiner les fonds
         batch.draw(imgFond1, xFond1, 0);
         batch.draw(imgFond2, xFond2, 0);
-    
-        // Dessiner le château et le panneau
-        if (!departAtteint) {
-            batch.draw(imgChateau1, 10 + xFond1, 60);
-            batch.draw(imgDepart, 200 + xFond1, 60);
-    
-            // Vérifier si Mario a dépassé la position limite de départ
-            if (mario.getX() >= positionLimiteDepart + imgDepart.getWidth()) {
-                departAtteint = true;
+        
+        // Vérifier si les éléments de début doivent être affichés
+        if (afficherElementsDebut) {
+            // Calculer les positions relatives des éléments (château et panneau de départ)
+            int positionChateauDebutX = POSITION_CHATEAU_DEBUT + xFond1;
+            int positionPanneauDepartX = POSITION_PANNEAU_DEPART + xFond1;
+        
+            // Dessiner le château s'il est visible à l'écran
+            if (positionChateauDebutX > -imgChateau1.getWidth() && 
+                positionChateauDebutX < Gdx.graphics.getWidth()) {
+                batch.draw(imgChateau1, positionChateauDebutX, HAUTEUR_OBJETS);
+            }
+        
+            // Dessiner le panneau de départ s'il est visible à l'écran
+            if (positionPanneauDepartX > -imgDepart.getWidth() && 
+                positionPanneauDepartX < Gdx.graphics.getWidth()) {
+                batch.draw(imgDepart, positionPanneauDepartX, HAUTEUR_OBJETS);
             }
         }
-    
-        // Dessiner le château de fin et le drapeau
-        batch.draw(imgChateauFin, 5000, 55);
-        batch.draw(imgDrapeau, 4950, 55);
-    
+        
         // Dessiner Mario
         mario.dessine(batch);
-    
+        
         // Dessiner les tuyaux rouges
         for (TuyauRouge tuyau : tuyauxRouges) {
             batch.draw(tuyau.getTextureObjet(), tuyau.getX(), tuyau.getY());
         }
-    
+        
         // Dessiner les blocs
         for (Block bloc : blocs) {
             batch.draw(bloc.getTextureObjet(), bloc.getX(), bloc.getY());
         }
-    
-        // Dessiner les champs
+        
+        // Dessiner les autres éléments (champs, tortues, pièces, etc.)
         for (Champ champ : champs) {
             champ.render(batch);
         }
-    
-        // Dessiner les tortues
+        
         for (Tortue tortue : tortues) {
             tortue.render(batch);
         }
-    
-        // Dessiner les pièces avec animation
-    for (Piece piece : pieces) {
-        piece.render(batch);
-    }
-    
-    // Dessiner le score en dernier pour qu'il soit au-dessus de tout
-    scoreManager.render(batch);
-    
-    
-       
-    
-        // Terminer le batch une seule fois à la fin
+        
+        for (Piece piece : pieces) {
+            piece.render(batch);
+        }
+        
+        // Dessiner le score
+        scoreManager.render(batch);
+        
+        // Fin du batch
         batch.end();
     }
+    
+    
+    
 
     // Getters et Setters
     public int getxPos() {
@@ -519,19 +701,58 @@ public class Scene implements Screen {
         this.xFond2 = xFond2;
     }
 
+    /**
+     * Gère le déplacement parallaxe du fond avec optimisation des performances
+     * Utilise un accumulateur pour les petits déplacements et évite les calculs inutiles
+     */
     private void deplacementFond() {
-        // Déplacement du fond en fonction de la vitesse de Mario
-        xFond1 -= dx * 2; // Déplacement plus rapide du fond
-        xFond2 -= dx * 2;
-
-        // Réinitialisation du fond lorsqu'il sort de l'écran
-        if (xFond1 <= -largeurFond) {
-            xFond1 = xFond2 + largeurFond;
+        // Pas de déplacement si la vitesse horizontale est nulle
+        if (dx == 0) return;
+    
+        // Calculer le déplacement total basé sur la vitesse
+        float deplacement = dx * VITESSE_DEFILEMENT;
+        accumulateurDeplacement += deplacement;
+    
+        // Appliquer le déplacement aux positions des fonds
+        xFond1 -= deplacement;
+        xFond2 -= deplacement;
+    
+        // Gestion du repositionnement si les fonds sortent de l'écran
+        if (dx > 0) { // Déplacement vers la droite
+            if (xFond1 <= SEUIL_REPOSITION) {
+                xFond1 = xFond2 + largeurFond;
+                accumulateurDeplacement = 0; // Réinitialiser pour éviter les erreurs
+            }
+            if (xFond2 <= SEUIL_REPOSITION) {
+                xFond2 = xFond1 + largeurFond;
+                accumulateurDeplacement = 0;
+            }
+        } else { // Déplacement vers la gauche
+            if (xFond1 >= largeurFond) {
+                xFond1 = xFond2 - largeurFond;
+                accumulateurDeplacement = 0;
+            }
+            if (xFond2 >= largeurFond) {
+                xFond2 = xFond1 - largeurFond;
+                accumulateurDeplacement = 0;
+            }
         }
-        if (xFond2 <= -largeurFond) {
-            xFond2 = xFond1 + largeurFond;
+    
+        // Correction périodique pour éviter une accumulation d'erreurs
+        if (Math.abs(accumulateurDeplacement) > 1.0f) {
+            xFond1 = Math.round(xFond1);
+            xFond2 = Math.round(xFond2);
+            accumulateurDeplacement = 0;
         }
     }
+    
+    // Réinitialisation des positions des fonds, utile pour recommencer un niveau
+    public void resetFondPositions() {
+        xFond1 = 0;
+        xFond2 = largeurFond;
+        accumulateurDeplacement = 0;
+    }
+    
 
     private void deplacementMario() {
         mario.setX(Gdx.graphics.getWidth() / 2 - mario.getLargeur() / 2);
@@ -778,6 +999,16 @@ public class Scene implements Screen {
         }
 
         scoreManager.dispose(); // Ajouter la libération des ressources du score
+        if (backgroundTexture != null) {
+            backgroundTexture.dispose();
+        }
+        font.dispose(); 
+        }
+        // Libérer les ressources de la police
 
     }
-}    
+
+    
+    
+
+   
