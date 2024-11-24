@@ -4,14 +4,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -20,6 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.mathmaurer.affichage.CompteARebours;
 import com.mathmaurer.affichage.Score;
 import com.mathmaurer.objets.Block;
 import com.mathmaurer.objets.Objet;
@@ -48,6 +47,9 @@ public class Scene implements Screen {
     private List<Block> blocs;
     private List<Champ> champs;
     private List<Tortue> tortues;
+    private List<Piece> pieces; // Nouvelle liste pour les pièces
+    private Score scoreManager; // Ajout du gestionnaire de score
+    private CompteARebours compteARebours;
 
     private boolean isInMenu;
     private Stage stage;
@@ -74,10 +76,6 @@ public class Scene implements Screen {
     private final int HAUTEUR_SOL = 55; // Sol à y = 0
     private final int HAUTEUR_PLAFOND = 300; // Par exemple, plafond à y = 300
     
-
-    private List<Piece> pieces; // Nouvelle liste pour les pièces
-    private Score scoreManager; // Ajout du gestionnaire de score
-
 
     public Scene() {
         // Initialisation des positions
@@ -119,6 +117,9 @@ public class Scene implements Screen {
         blocs = new ArrayList<>();
         champs = new ArrayList<>();
         tortues = new ArrayList<>();
+        pieces = new ArrayList<>();
+        scoreManager = new Score();
+        compteARebours = new CompteARebours();
 
         // Ajouter des tuyaux rouges
         tuyauxRouges.add(new TuyauRouge(600, 55));
@@ -169,9 +170,6 @@ public class Scene implements Screen {
         positionLimiteDepart = 220 + imgDepart.getWidth();
         xPos = positionLimiteDepart;
 
-
-        pieces = new ArrayList<>();
-        scoreManager = new Score();
 
         // Ajouter des pièces à des positions spécifiques
         pieces.add(new Piece(450, 180));
@@ -424,7 +422,7 @@ public class Scene implements Screen {
     
         gererCollisions();
     
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        // Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         
         // Commencer le batch une seule fois
         batch.begin();
@@ -477,10 +475,10 @@ public class Scene implements Screen {
     }
     
     // Dessiner le score en dernier pour qu'il soit au-dessus de tout
-    scoreManager.render(batch);
+        scoreManager.render(batch);
     
-    
-       
+        // Dessiner le compte à rebours
+        compteARebours.render(batch);
     
         // Terminer le batch une seule fois à la fin
         batch.end();
