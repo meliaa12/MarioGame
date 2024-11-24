@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class Score {
+    
     private int score;
     private BitmapFont font;
     private final int POSITION_X = 20;
