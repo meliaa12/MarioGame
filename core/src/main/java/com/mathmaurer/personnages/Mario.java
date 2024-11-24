@@ -118,16 +118,16 @@ public class Mario extends Personnage {
     }
 
     public void meurt() {
-        // String str = "images/boom.png";
-        // this.compteurMort++;
-        // if (this.compteurMort > 100) {
-        //     str = "images/marioMeurt.png";
-        //     this.setY(this.getY() - 0);
+        String str = "images/boom.png";
+        this.compteurMort++;
+        if (this.compteurMort > 5) {
+            str = "images/marioMeurt.png";
+            this.setY(this.getY() - 0);
            
-        // }
-        // this.textureMarioMeurt = new Texture(str);
+        }
+        this.textureMarioMeurt = new Texture(str);
 
-        setVivant(false);
+       
        
     }
 

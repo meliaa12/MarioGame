@@ -16,7 +16,7 @@ public class Score {
         this.score = 0;
         font = new BitmapFont();
         font.setColor(Color.WHITE);
-        font.getData().setScale(2.0f);
+        font.getData().setScale(1.0f);
         // Positionner le score en haut de l'écran
         POSITION_Y = Gdx.graphics.getHeight() - 20;
     }

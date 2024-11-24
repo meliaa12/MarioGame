@@ -21,7 +21,7 @@ public class CompteARebours implements Runnable {
         this.str = "Temps restant : 100";
         this.font = new BitmapFont();
         this.font.setColor(Color.WHITE);
-        this.font.getData().setScale(2.0f);
+        this.font.getData().setScale(1.0f);
         // Positionner le compte à rebours en haut de l'écran
         POSITION_X = Gdx.graphics.getWidth() - 200;
         POSITION_Y = Gdx.graphics.getHeight() - 20;

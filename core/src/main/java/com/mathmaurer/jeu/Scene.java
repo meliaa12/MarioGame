@@ -82,7 +82,7 @@ public class Scene implements Screen {
         this.xFond1 = 0;
         this.xFond2 = largeurFond;
         this.dx = 0;
-        this.xPos = 220;
+        this.xPos = 200;
         this.aDeplaceDroite = false;
         this.departAtteint = false;
 
@@ -110,8 +110,8 @@ public class Scene implements Screen {
         batch = new SpriteBatch();
 
         // Initialisation des objets
-        mario = new Mario(220, 55, 28, 50); // Initialisation avec la position de départ
-
+        mario = new Mario(200, 55, 28, 50); // Initialisation avec la position de départ
+        // mario = new Mario(Gdx.graphics.getWidth() / 2 - 21.5f, 55, 43, 65);
         // Initialisation des tuyaux et des blocs
         tuyauxRouges = new ArrayList<>();
         blocs = new ArrayList<>();
@@ -147,28 +147,29 @@ public class Scene implements Screen {
 
          // Ajouter des champs
         champs.add(new Champ(800, 55));
-        champs.add(new Champ(1100, 55));
-        champs.add(new Champ(2100, 55));
-        champs.add(new Champ(2400, 55));
-        champs.add(new Champ(3200, 55));
-        champs.add(new Champ(3500, 55));
-        champs.add(new Champ(3700, 55));
-        champs.add(new Champ(4500, 55));
+        // champs.add(new Champ(1100, 55));
+        // champs.add(new Champ(2100, 55));
+        // champs.add(new Champ(2400, 55));
+        // champs.add(new Champ(3200, 55));
+        // champs.add(new Champ(3500, 55));
+        // champs.add(new Champ(3700, 55));
+        // champs.add(new Champ(4500, 55));
 
         // Ajouter des tortues
-        tortues.add(new Tortue(950, 55));
-        tortues.add(new Tortue(1500, 55));
-        tortues.add(new Tortue(1800, 55));
-        tortues.add(new Tortue(2400, 55));
-        tortues.add(new Tortue(3100, 55));
-        tortues.add(new Tortue(3600, 55));
-        tortues.add(new Tortue(3900, 55));
-        tortues.add(new Tortue(4200, 55));
-        tortues.add(new Tortue(4400, 55));
+        // tortues.add(new Tortue(950, 55));
+        // tortues.add(new Tortue(1500, 55));
+        // tortues.add(new Tortue(1800, 55));
+        // tortues.add(new Tortue(2400, 55));
+        // tortues.add(new Tortue(3100, 55));
+        // tortues.add(new Tortue(3600, 55));
+        // tortues.add(new Tortue(3900, 55));
+        // tortues.add(new Tortue(4200, 55));
+        // tortues.add(new Tortue(4400, 55));
 
         // Position limite de départ pour Mario
-        positionLimiteDepart = 220 + imgDepart.getWidth();
-        xPos = positionLimiteDepart;
+        positionLimiteDepart = 300;  
+        xPos = positionLimiteDepart;     
+        
 
 
         // Ajouter des pièces à des positions spécifiques
@@ -389,8 +390,8 @@ public class Scene implements Screen {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0, 0, 0, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        // Gdx.gl.glClearColor(0, 0, 0, 1);
+        // Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         if (isInMenu) {
             renderMenu();
@@ -422,7 +423,8 @@ public class Scene implements Screen {
     
         gererCollisions();
     
-        // Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+    
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         
         // Commencer le batch une seule fois
         batch.begin();
@@ -430,21 +432,23 @@ public class Scene implements Screen {
         // Dessiner les éléments de l'arrière-plan
         batch.draw(imgFond1, xFond1, 0);
         batch.draw(imgFond2, xFond2, 0);
+        
+
+          // Dessiner le château et le panneau de départ
+    if (!departAtteint) {
+        batch.draw(imgChateau1, 10, 55);
+        batch.draw(imgDepart, 220, 55);
+    }
+
+    // Vérifier si Mario a dépassé la position limite de départ
+    if (mario.getX() > positionLimiteDepart) {
+        departAtteint = true;
+    }
     
-        // Dessiner le château et le panneau
-        if (!departAtteint) {
-            batch.draw(imgChateau1, 10 + xFond1, 60);
-            batch.draw(imgDepart, 200 + xFond1, 60);
-    
-            // Vérifier si Mario a dépassé la position limite de départ
-            if (mario.getX() >= positionLimiteDepart + imgDepart.getWidth()) {
-                departAtteint = true;
-            }
-        }
-    
+
         // Dessiner le château de fin et le drapeau
-        batch.draw(imgChateauFin, 5000, 55);
-        batch.draw(imgDrapeau, 4950, 55);
+        batch.draw(imgChateauFin, 1000, 55);
+        batch.draw(imgDrapeau, 950, 55);
     
         // Dessiner Mario
         mario.dessine(batch);
