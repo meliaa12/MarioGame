@@ -86,10 +86,6 @@ public class Scene implements Screen {
     private final float DELAI_MENU_FIN = 9f; // 3 secondes de délai
     private boolean musicFinJouee = false;
     
-
-    private List<Piece> pieces; // Nouvelle liste pour les pièces
-    private Score scoreManager; // Ajout du gestionnaire de score
-
   
     private static final int BACKGROUND_LAYERS = 1; // Change to 1 layer
    private static final float[] PARALLAX_SPEEDS = {1.0f}; // Single speed
