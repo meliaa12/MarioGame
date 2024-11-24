@@ -132,46 +132,46 @@ public class Scene implements Screen {
         scoreManager = new Score();
         compteARebours = new CompteARebours();
 
-        // Ajouter des tuyaux rouges
+       // Ajouter des tuyaux rouges
         tuyauxRouges.add(new TuyauRouge(600, 55));
         tuyauxRouges.add(new TuyauRouge(1000, 55));
         tuyauxRouges.add(new TuyauRouge(1600, 55));
         tuyauxRouges.add(new TuyauRouge(1900, 55));
         tuyauxRouges.add(new TuyauRouge(2500, 55));
         tuyauxRouges.add(new TuyauRouge(3000, 55));
+        tuyauxRouges.add(new TuyauRouge(3400, 55)); // Ajout pour plus de régularité
         tuyauxRouges.add(new TuyauRouge(4000, 55));
-        tuyauxRouges.add(new TuyauRouge(3990, 55));
-      
 
-        // Ajouter des blocs
-        blocs.add(new Block(400, 180));
-        blocs.add(new Block(1200, 180));
-        blocs.add(new Block(1270, 170));
-        blocs.add(new Block(1340, 160));
-        blocs.add(new Block(2000, 180));
-        blocs.add(new Block(2600, 160));
-        blocs.add(new Block(2650, 180));
-        blocs.add(new Block(3500, 160));
-     
+        // Ajouter des blocs (hauteurs adaptées)
+        blocs.add(new Block(500, 120)); // Un bloc bas pour apprendre à sauter
+        blocs.add(new Block(800, 150)); // Accessible par un saut simple
+        blocs.add(new Block(1200, 150));
+        blocs.add(new Block(1270, 150)); // Petits espaces entre blocs
+        blocs.add(new Block(1340, 150));
+        blocs.add(new Block(2000, 120)); // Bloc plus bas pour éviter la monotonie
+        blocs.add(new Block(2600, 130)); // Légèrement plus haut mais accessible
+        blocs.add(new Block(2650, 150));
+        blocs.add(new Block(3000, 120)); // Ajouter de la variété dans les hauteurs
+        blocs.add(new Block(3500, 150));
+        blocs.add(new Block(3700, 130)); // Bloc isolé pour un challenge
 
-         // Ajouter des champs
-        champs.add(new Champ(800, 55));
-        champs.add(new Champ(1100, 55));
+        // Ajouter des champs (espacement raisonnable pour laisser le joueur respirer)
+        champs.add(new Champ(900, 55));
+        champs.add(new Champ(1400, 55));
         champs.add(new Champ(2100, 55));
         champs.add(new Champ(2400, 55));
-        champs.add(new Champ(3200, 55));
+        champs.add(new Champ(3100, 55));
         champs.add(new Champ(3500, 55));
-       
 
-        // Ajouter des tortues
+        // Ajouter des tortues (placées entre les tuyaux pour éviter les zones vides)
         tortues.add(new Tortue(950, 55));
         tortues.add(new Tortue(1500, 55));
         tortues.add(new Tortue(1800, 55));
-        tortues.add(new Tortue(2400, 55));
-        tortues.add(new Tortue(3100, 55));
-        tortues.add(new Tortue(3600, 55));
+        tortues.add(new Tortue(2200, 55)); // Plus proche pour augmenter la difficulté
+        tortues.add(new Tortue(2900, 55));
+        tortues.add(new Tortue(3300, 55));
         tortues.add(new Tortue(3900, 55));
-     
+
 
         // Position limite de départ pour Mario
         positionLimiteDepart = 300;  
@@ -416,7 +416,8 @@ public class Scene implements Screen {
 
     private boolean partieGagnee() {
         return this.compteARebours.getCompteurTemps() > 0 && 
-               this.mario.isVivant() && 
+               this.mario.isVivant() &&  
+               this.scoreManager.getScore() >= 50 && 
                this.xPos > 4500;
     }
     
@@ -560,12 +561,13 @@ if (finDePartie()) {
 
     // Attendre le délai avant d'afficher le menu
     if (timerFinPartie >= DELAI_MENU_FIN) {
-        isInMenu = true;
-        Gdx.input.setInputProcessor(menuInputProcessor);
-        // Réinitialiser les variables pour la prochaine partie
         afficherMessageFin = false;
         timerFinPartie = 0;
         musicFinJouee = false;
+        isInMenu = true;
+        Gdx.input.setInputProcessor(menuInputProcessor);
+        // Réinitialiser les variables pour la prochaine partie
+     
     }
 }
         // Terminer le batch une seule fois à la fin
@@ -663,17 +665,13 @@ if (finDePartie()) {
     }
 
     private void gererCollisions() {
-        // // Détection des collisions avec les objets (tuyaux et blocs)
-        // List<Objet> objets = new ArrayList<>();
-        // objets.addAll(tuyauxRouges);
-        // objets.addAll(blocs);
-        
+        // Gérer les collisions entre Mario et les tuyaux rouges
         for (TuyauRouge tuyau : tuyauxRouges) {
             if (mario.proche(tuyau)) {
                 if (mario.contactDessus(tuyau)) {
                     // Mario se tient sur le tuyau
                     mario.setY(tuyau.getY() + tuyau.getHauteur());
-                    // mario.setJumping(false); // Mario n'est plus en train de sauter
+                    mario.setJumping(false); // Mario n'est plus en train de sauter
                 } else if (mario.contactAvant(tuyau) || mario.contactArriere(tuyau) || mario.contactDessous(tuyau)) {
                     // Gérer la collision (par exemple, arrêter le mouvement de Mario)
                     mario.setMarche(false);
@@ -688,7 +686,7 @@ if (finDePartie()) {
                 if (mario.contactDessus(bloc)) {
                     // Mario se tient sur le bloc
                     mario.setY(bloc.getY() + bloc.getHauteur());
-                    // mario.setJumping(false); // Mario n'est plus en train de sauter
+                    mario.setJumping(false); // Mario n'est plus en train de sauter
                 } else if (mario.contactAvant(bloc) || mario.contactArriere(bloc) || mario.contactDessous(bloc)) {
                     // Gérer la collision (par exemple, arrêter le mouvement de Mario)
                     mario.setMarche(false);
@@ -696,85 +694,85 @@ if (finDePartie()) {
                 }
             }
         }
-
+    
+        // Gérer les collisions entre Mario et les pièces
         Iterator<Piece> iterPieces = pieces.iterator();
         while (iterPieces.hasNext()) {
             Piece piece = iterPieces.next();
             if (mario.proche(piece)) {
-                if (mario.contactAvant(piece) || mario.contactArriere(piece) || 
-                    mario.contactDessus(piece) || mario.contactDessous(piece)) {
+                if (mario.contactAvant(piece) || mario.contactArriere(piece) || mario.contactDessus(piece) || mario.contactDessous(piece)) {
+                    // Jouer le son de collection de pièce
                     playSound(coinSound);
-                    scoreManager.addScore(10); // Ajouter 10 points
-                    piece.stopAnimation(); // Arrêter l'animation avant de supprimer
+                    // Augmenter le score
+                    scoreManager.addScore(10);
+                    // Retirer la pièce
+                    piece.stopAnimation();
                     iterPieces.remove();
-                    System.out.println("Score actuel : " + scoreManager.getScore()); // Debug
                 }
             }
         }
-    
-    
     
         // Gérer les collisions entre Mario et les champs
-    for (Champ champ : champs) {
-        if (mario.proche(champ) && champ.isVivant()) {
-            if (mario.contactDessus(champ)) {
-                playSound(powerDownSound);
-                champ.meurt(); // Mario écrase le champ
-                mario.setVelocityY(-10); // Petit saut après avoir écrasé un ennemi
-            } else if (mario.contactAvant(champ) || mario.contactArriere(champ) || mario.contactDessous(champ)) {
-                if (mario.isVivant()) {
-                    playSound(dieSound);
-                    mario.meurt();
+        for (Champ champ : champs) {
+            if (mario.proche(champ) && champ.isVivant()) {
+                if (mario.contactDessus(champ)) {
+                    playSound(powerDownSound);
+                    champ.meurt(); // Mario écrase le champ
+                    mario.setVelocityY(-10); // Petit saut après avoir écrasé un ennemi
+                } else if (mario.contactAvant(champ) || mario.contactArriere(champ) || mario.contactDessous(champ)) {
+                    if (mario.isVivant()) {
+                        playSound(dieSound);
+                        mario.meurt();
+                    }
+                }
+            }
+        }
+    
+        // Gérer les collisions entre Mario et les tortues
+        for (Tortue tortue : tortues) {
+            if (mario.proche(tortue) && tortue.isVivant()) {
+                if (mario.contactDessus(tortue)) {
+                    playSound(powerDownSound);
+                    tortue.mourir(); // Mario écrase la tortue
+                    mario.setVelocityY(-10); // Petit saut après avoir écrasé un ennemi
+                } else if (mario.contactAvant(tortue) || mario.contactArriere(tortue) || mario.contactDessous(tortue)) {
+                    if (mario.isVivant()) {
+                        playSound(dieSound);
+                        mario.meurt();
+                    }
+                }
+            }
+        }
+    
+        // Gérer les collisions entre les champignons et les objets
+        for (Champ champ : champs) {
+            for (Objet objet : tuyauxRouges) {
+                if (champ.proche(objet)) {
+                    champ.contact(objet);
+                }
+            }
+            for (Objet objet : blocs) {
+                if (champ.proche(objet)) {
+                    champ.contact(objet);
+                }
+            }
+        }
+    
+        // Gérer les collisions entre les tortues et les objets
+        for (Tortue tortue : tortues) {
+            for (Objet objet : tuyauxRouges) {
+                if (tortue.proche(objet)) {
+                    tortue.contact(objet);
+                }
+            }
+            for (Objet objet : blocs) {
+                if (tortue.proche(objet)) {
+                    tortue.contact(objet);
                 }
             }
         }
     }
-
-    // Gérer les collisions entre Mario et les tortues
-    for (Tortue tortue : tortues) {
-        if (mario.proche(tortue) && tortue.isVivant()) {
-            if (mario.contactDessus(tortue)) {
-                playSound(powerDownSound);
-                tortue.mourir(); // Mario écrase la tortue
-                mario.setVelocityY(-10); // Petit saut après avoir écrasé un ennemi
-            } else if (mario.contactAvant(tortue) || mario.contactArriere(tortue) || mario.contactDessous(tortue)) {
-                if (mario.isVivant()) {
-                    playSound(dieSound);
-                    mario.meurt();
-                }
-            }
-        }
-    }
-
-    // Gérer les collisions entre les champignons et les objets
-    for (Champ champ : champs) {
-        for (Objet objet : tuyauxRouges) {
-            if (champ.proche(objet)) {
-                champ.contact(objet);
-            }
-        }
-        for (Objet objet : blocs) {
-            if (champ.proche(objet)) {
-                champ.contact(objet);
-            }
-        }
-    }
-
-    // Gérer les collisions entre les tortues et les objets
-    for (Tortue tortue : tortues) {
-        for (Objet objet : tuyauxRouges) {
-            if (tortue.proche(objet)) {
-                tortue.contact(objet);
-            }
-        }
-        for (Objet objet : blocs) {
-            if (tortue.proche(objet)) {
-                tortue.contact(objet);
-            }
-        }
-    }
-    }
-
+    
     private void toggleMusic() {
         isMusicEnabled = !isMusicEnabled;
         if (isMusicEnabled) {

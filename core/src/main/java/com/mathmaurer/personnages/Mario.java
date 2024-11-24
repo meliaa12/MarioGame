@@ -14,6 +14,7 @@ public class Mario extends Personnage {
     private Texture textureMarioSautDroite;
     private Texture textureMarioSautGauche;
     private Texture textureMarioMeurt;
+    private Texture textureBoom;
     private int compteurMort;
     private boolean isJumping;
     private float vy;
@@ -29,15 +30,20 @@ public class Mario extends Personnage {
         this.textureMarioSautDroite = new Texture("images/marioSautDroite.png");
         this.textureMarioSautGauche = new Texture("images/marioSautGauche.png");
         this.textureMarioMeurt = new Texture("images/marioMeurt.png");
+        this.textureBoom = new Texture("images/boom.png");
         this.compteurMort = 0;
         this.isJumping = false;
         this.vy = 0;
     }
 
     public void dessine(SpriteBatch batch) {
-        Texture texture;
-        if (!isVivant()) {
-            texture = textureMarioMeurt;
+        Texture texture = textureMarioArretDroite;
+
+        if (!isVivant() && this.compteurMort == 1) {
+            // Si Mario est mort, afficher "boom" et "marioMeurt" simultanément
+         
+            batch.draw(textureMarioMeurt, getX(), getY() - 20, getLargeur(), getHauteur()); 
+            batch.draw(textureBoom, getX(), getY(), getLargeur(), getHauteur());
         } else if (isJumping) {
             if (versDroite) {
                 texture = textureMarioSautDroite;
@@ -58,6 +64,7 @@ public class Mario extends Personnage {
             }
         }
 
+        // Dessine la texture de Mario (dans son état courant ou de mort)
         batch.draw(texture, getX(), getY(), getLargeur(), getHauteur());
     }
 
@@ -118,27 +125,22 @@ public class Mario extends Personnage {
     }
 
     public void meurt() {
-        String str = "images/boom.png";
-        this.compteurMort++;
-        if (this.compteurMort > 5) {
-            str = "images/marioMeurt.png";
-            this.setY(this.getY() - 0);
-            this.setVivant(false);
+        if (this.compteurMort == 0) {
+            // Première mort : Mario passe directement à l'état de mort avec "boom" et "marioMeurt"
+            this.textureMarioMeurt = new Texture("images/marioMeurt.png"); // Animation de mort
+            this.compteurMort++; // Indique que Mario a perdu sa chance
+            this.setVivant(false); // Mario est maintenant mort
         }
-        this.textureMarioMeurt = new Texture(str);
-
-       
-       
     }
-
+    
     // Nouvelle méthode pour définir la vitesse verticale
     public void setVelocityY(float velocity) {
         // Utilisé pour le petit saut après avoir écrasé un ennemi
         this.vy = velocity;
     }
 
-     // Nouvelle méthode pour définir l'état de saut
-     public void setJumping(boolean isJumping) {
+    // Nouvelle méthode pour définir l'état de saut
+    public void setJumping(boolean isJumping) {
         this.isJumping = isJumping;
     }
 }
