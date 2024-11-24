@@ -27,12 +27,12 @@ public class Score {
         for(int xOffset=-1; xOffset<=1; xOffset++) {
             for(int yOffset=-1; yOffset<=1; yOffset++) {
                 if(xOffset != 0 || yOffset != 0) {
-                    font.draw(batch, "SCORE: " + score, POSITION_X + xOffset, POSITION_Y + yOffset);
+                    font.draw(batch, "SCORE: " + score + " / 100",POSITION_X + xOffset, POSITION_Y + yOffset);
                 }
             }
         }
         font.setColor(Color.WHITE);
-        font.draw(batch, "SCORE: " + score, POSITION_X, POSITION_Y);
+        font.draw(batch, "SCORE: " + score + " / 100", POSITION_X, POSITION_Y);
     }
 
     public void addScore(int points) {
