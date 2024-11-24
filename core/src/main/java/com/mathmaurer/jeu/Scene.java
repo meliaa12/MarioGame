@@ -4,14 +4,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
@@ -188,7 +186,7 @@ public Scene(float screenWidth) {
         blocs.add(new Block(4200, 200));
         blocs.add(new Block(4300, 210));
 
-         // Ajouter des champs
+        //  Ajouter des champs
         champs.add(new Champ(800, 55));
         champs.add(new Champ(1100, 55));
         champs.add(new Champ(2100, 55));
