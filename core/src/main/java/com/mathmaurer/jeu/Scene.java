@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
@@ -19,6 +20,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.mathmaurer.affichage.Score;
 import com.mathmaurer.objets.Block;
 import com.mathmaurer.objets.Objet;
 import com.mathmaurer.objets.Piece;
@@ -74,7 +76,8 @@ public class Scene implements Screen {
     
 
     private List<Piece> pieces; // Nouvelle liste pour les pièces
-    private int score; 
+    private Score scoreManager; // Ajout du gestionnaire de score
+
 
     public Scene() {
         // Initialisation des positions
@@ -168,7 +171,7 @@ public class Scene implements Screen {
 
 
         pieces = new ArrayList<>();
-        score = 0;
+        scoreManager = new Score();
 
         // Ajouter des pièces à des positions spécifiques
         pieces.add(new Piece(450, 180));
@@ -188,14 +191,12 @@ public class Scene implements Screen {
         pieces.add(new Piece(4250, 230));
         pieces.add(new Piece(4280, 230));
 
-        // Démarrer l'animation des pièces
         for (Piece piece : pieces) {
             new Thread(piece).start();
         }
-    }
-
     
-
+    }
+    
     private void initializeAudio() {
         try {
             // Vérifiez si le fichier audio de fond existe
@@ -470,16 +471,16 @@ public class Scene implements Screen {
             tortue.render(batch);
         }
     
-        // Dessiner les pièces
-        for (Piece piece : pieces) {
-            piece.render(batch);
-        }
+        // Dessiner les pièces avec animation
+    for (Piece piece : pieces) {
+        piece.render(batch);
+    }
     
-        // Afficher le score
-        BitmapFont scoreFont = new BitmapFont();
-        scoreFont.setColor(Color.WHITE);
-        scoreFont.draw(batch, "Score: " + score, 20, Gdx.graphics.getHeight() - 20);
-        scoreFont.dispose(); // Clean up the font after use
+    // Dessiner le score en dernier pour qu'il soit au-dessus de tout
+    scoreManager.render(batch);
+    
+    
+       
     
         // Terminer le batch une seule fois à la fin
         batch.end();
@@ -611,7 +612,7 @@ public class Scene implements Screen {
                 }
             }
         }
-        // Détection des collisions avec les pièces
+
         Iterator<Piece> iterPieces = pieces.iterator();
         while (iterPieces.hasNext()) {
             Piece piece = iterPieces.next();
@@ -619,11 +620,14 @@ public class Scene implements Screen {
                 if (mario.contactAvant(piece) || mario.contactArriere(piece) || 
                     mario.contactDessus(piece) || mario.contactDessous(piece)) {
                     playSound(coinSound);
-                    score += 10;
+                    scoreManager.addScore(10); // Ajouter 10 points
+                    piece.stopAnimation(); // Arrêter l'animation avant de supprimer
                     iterPieces.remove();
+                    System.out.println("Score actuel : " + scoreManager.getScore()); // Debug
                 }
             }
         }
+    
     
         // // Détection des collisions des champignons entre eux
         // for (int i = 0; i < champs.size(); i++) {
@@ -772,5 +776,8 @@ public class Scene implements Screen {
         for (Piece piece : pieces) {
             piece.dispose();
         }
+
+        scoreManager.dispose(); // Ajouter la libération des ressources du score
+
     }
 }    
